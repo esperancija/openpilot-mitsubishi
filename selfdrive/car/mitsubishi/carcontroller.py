@@ -75,6 +75,7 @@ class CarController():
                         int(enabled), int(left_line), int(right_line), int(lead), steerRatio, sad, angleOffset, frame)
 
     #can_sends.append(self.packer.make_can_msg(921, b'\x00\x00\x00\x00\x00\x00\x00\x00', 0))
+    
     can_sends.append(new_msg)
 
     self.apply_steer_last = apply_steer
