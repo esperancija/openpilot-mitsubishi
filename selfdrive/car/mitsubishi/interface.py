@@ -31,11 +31,11 @@ class CarInterface(CarInterfaceBase):
     #ret.safetyConfigs[0].safetyParam = 1 #EPS_SCALE[candidate] 0x399 modelV2
 
     ret.steerLimitTimer = 1 #0.4
-    ret.steerRateCost = 0.15
+    ret.steerRateCost = 0.05 #0.02 #0.15
 
-    ret.steerActuatorDelay = 0.4 #0.05
-    ret.steerRatio = 13 #12.4 #13.00
-
+    ret.steerActuatorDelay = 0.3 #0.45 #0.55 #5 #0.05
+    ret.steerRatio = 14 #10.15  #12.4 #13.00
+	
 
     ret.lateralTuning.pid.kf = 0. #0.000039
     #ret.lateralTuning.pid.kiBP, ret.lateralTuning.pid.kpBP = [[0., 10., 20.], [0., 10., 20.]]

@@ -42,9 +42,9 @@ class CarState(CarStateBase):
                         cp.vl["DOORS_STATUS"]["DOOR_OPEN_RL"], cp.vl["DOORS_STATUS"]["DOOR_OPEN_RR"]])
     ret.seatbeltUnlatched = cp.vl["SEATBELT_STATUS"]["SEATBELT_DRIVER_UNLATCHED"] != 0
 
-    ret.brakePressed = cp.vl["BRAKE_MODULE"]["BRAKE_PRESSED"] != 0
+    ret.brakePressed = False #cp.vl["BRAKE_MODULE"]["BRAKE_PRESSED"] != 0
 
-    ret.gas = cp.vl["GAS_PEDAL"]["GAS_PEDAL"]
+    ret.gas = 0 #cp.vl["GAS_PEDAL"]["GAS_PEDAL"]
     ret.gasPressed = ret.gas > 2
 
     #print("gas = %d" % (ret.gas))
@@ -56,7 +56,7 @@ class CarState(CarStateBase):
     #ret.engineRPM  = self.swapBytesUnsigned(int(cp.vl["ENGINE_RPM_ID"]["ENGINE_RPM"])) #cp.vl["ENGINE_RPM_ID"]["ENGINE_RPM"]
 
 
-    speed_factor = 0.3/4
+    speed_factor = 0.27/4
     ret.wheelSpeeds.fl = self.swapBytesUnsigned(int(cp.vl["WHEEL_SPEEDS_1"]["WHEEL_SPEED_FL"])) * CV.KPH_TO_MS * speed_factor
     ret.wheelSpeeds.fr = self.swapBytesUnsigned(int(cp.vl["WHEEL_SPEEDS_1"]["WHEEL_SPEED_FR"])) * CV.KPH_TO_MS * speed_factor
     ret.wheelSpeeds.rl = self.swapBytesUnsigned(int(cp.vl["WHEEL_SPEEDS_1"]["WHEEL_SPEED_RL"])) * CV.KPH_TO_MS * speed_factor
@@ -118,8 +118,8 @@ class CarState(CarStateBase):
 
     #ret.stockAeb = bool(cp_cam.vl["PRE_COLLISION"]["PRECOLLISION_ACTIVE"] and cp_cam.vl["PRE_COLLISION"]["FORCE"] < -1e-5)
     #ret.espDisabled = cp.vl["ESP_CONTROL"]["TC_DISABLED"] != 0
-    ret.leftBlindspot = bool(cp.vl["BSW_STATUS"]["LEFT_WARNING"])
-    ret.rightBlindspot = bool(cp.vl["BSW_STATUS"]["RIGHT_WARNING"])
+    ret.leftBlindspot = False #bool(cp.vl["BSW_STATUS"]["LEFT_WARNING"])
+    ret.rightBlindspot = False #bool(cp.vl["BSW_STATUS"]["RIGHT_WARNING"])
 
     return ret
 
@@ -157,7 +157,7 @@ class CarState(CarStateBase):
       ("LEFT_WARNING", "BSW_STATUS", 0),
       ("RIGHT_WARNING", "BSW_STATUS", 0),
 
-      ("TEST_DATA", "JOYSTICK_COMMAND", 0),
+  #    ("TEST_DATA", "JOYSTICK_COMMAND", 0),
       ("OP_ON", "JOYSTICK_COMMAND", 0),
     ]
 
