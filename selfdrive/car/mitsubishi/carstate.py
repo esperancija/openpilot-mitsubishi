@@ -62,12 +62,6 @@ class CarState(CarStateBase):
     ret.wheelSpeeds.rl = self.swapBytesUnsigned(int(cp.vl["WHEEL_SPEEDS_1"]["WHEEL_SPEED_RL"])) * CV.KPH_TO_MS * speed_factor
     ret.wheelSpeeds.rr = self.swapBytesUnsigned(int(cp.vl["WHEEL_SPEEDS_2"]["WHEEL_SPEED_RR"])) * CV.KPH_TO_MS * speed_factor
 
-    #ret.wheelSpeeds.fl = cp.vl["GAS_PEDAL"]["GAS_PEDAL"]
-    #ret.wheelSpeeds.fr =  cp.vl["GAS_PEDAL"]["GAS_PEDAL"]
-    #ret.wheelSpeeds.rl = cp.vl["GAS_PEDAL"]["GAS_PEDAL"]
-    #ret.wheelSpeeds.rr = cp.vl["GAS_PEDAL"]["GAS_PEDAL"]
-
-
     ret.vEgoRaw = mean([ret.wheelSpeeds.fl, ret.wheelSpeeds.fr, ret.wheelSpeeds.rl, ret.wheelSpeeds.rr])
     ret.vEgo, ret.aEgo = self.update_speed_kf(ret.vEgoRaw)
 
@@ -75,7 +69,7 @@ class CarState(CarStateBase):
 
     sta = self.swapBytesSigned(int(cp.vl["STEER_ANGLE_SENSOR"]["STEER_ANGLE"]))
     sta-=4096
-    sta /= 2
+    sta /= 3
     ret.steeringAngleDeg = sta
 
     srd = self.swapBytesSigned(int(cp.vl["STEER_ANGLE_SENSOR"]["STEER_RATE"]))
@@ -98,7 +92,7 @@ class CarState(CarStateBase):
     #print (ret.steeringAngleDeg)
 
     # we could use the override bit from dbc, but it's triggered at too high torque values
-    ret.steeringPressed = abs(ret.steeringTorque) > 100
+    ret.steeringPressed = abs(ret.steeringTorque) > 3
     #ret.steerWarning = False#0
 
     #ret.cruiseState.available = cp.vl["ACC_STATUS"]["CRUISE_ON"] != 0

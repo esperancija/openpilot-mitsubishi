@@ -23,10 +23,12 @@ class CarController():
     self.apply_steer_last = 0
     self.packer = CANPacker(dbc_name)
     self.sm = None
+    self.cnt = 0
 
-  def create_lkas_command(self, apply_steer, apply_angle, active, ll, rl, lc, sr, frame):
+  def create_lkas_command(self, apply_steer, apply_angle, active, ll, rl, lc, sr, sf, test2, frame):
     values = {
-      "LKAS_TEST_DATA_1": sr,
+      "LKAS_TEST_DATA_2": test2,
+      "LKAS_TEST_DATA_1": sf,
       "LKAS_LEAD_CAR": lc,
       "LKAS_STEERING_TORQUE": sr, #apply_steer,
       "LKAS_STEERING_ANGLE": apply_angle,
@@ -46,8 +48,14 @@ class CarController():
 
     if self.sm is None:
        self.sm = messaging.SubMaster(['liveParameters'])
+    else:
+      self.sm.update(0)
 
+    #if self.sm.updated():
     steerRatio = int(round(self.sm['liveParameters'].steerRatio * 10))
+    test2 = int(round(self.sm['liveParameters'].stiffnessFactor * 100))
+    stiff = int(round(self.sm['liveParameters'].angleOffsetDeg * 10))
+    #test2 = int(round(self.sm['liveParameters'].angleOffsetAverageDeg * 10))
 
     new_steer = int(round(actuators.steer * CarControllerParams.STEER_MOMENT_MAX))
     new_steer = -new_steer
@@ -55,11 +63,11 @@ class CarController():
     apply_steer = apply_std_steer_torque_limits(new_steer, self.apply_steer_last,
                                                    CS.out.steeringTorqueEps, CarControllerParams)
 
-    print ("ll=%d, rl=%d lead=%d sr=%d" % (left_line, right_line, lead, steerRatio)) # dmonitoringd
+    print ("ll=%d, rl=%d lead=%d sr=%d sf=%d tst=%d" % (left_line, right_line, lead, steerRatio, stiff, test2)) # dmonitoringd
 
     
     new_msg = self.create_lkas_command(int(apply_steer), int(actuators.steeringAngleDeg*2),
-                        int(enabled), int(left_line), int(right_line), int(lead), steerRatio,  frame)
+                        int(enabled), int(left_line), int(right_line), int(lead), steerRatio, stiff, test2, frame)
 
     #can_sends.append(self.packer.make_can_msg(921, b'\x00\x00\x00\x00\x00\x00\x00\x00', 0))
     can_sends.append(new_msg)

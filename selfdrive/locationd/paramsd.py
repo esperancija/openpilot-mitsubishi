@@ -144,16 +144,18 @@ def main(sm=None, pm=None):
   # TODO: cache the params with the capnp struct
   if params is None:
     params = {
-      'carFingerprint': CP.carFingerprint,
-      'steerRatio': CP.steerRatio,
-      'stiffnessFactor': 1.0,
-      'angleOffsetAverageDeg': 0.0,
+        'carFingerprint': CP.carFingerprint,
+        'steerRatio': CP.steerRatio,
+        'stiffnessFactor': 1.0,
+        'angleOffsetAverageDeg': 6.0,
     }
-    cloudlog.info("Parameter learner resetting to default values")
+  cloudlog.info("Parameter learner resetting to default values")
+
+  params['steerRatio'] = CP.steerRatio
 
   # When driving in wet conditions the stiffness can go down, and then be too low on the next drive
   # Without a way to detect this we have to reset the stiffness every drive
-  params['stiffnessFactor'] = 1.0
+  params['stiffnessFactor'] = 0.4 #1.0
   learner = ParamsLearner(CP, params['steerRatio'], params['stiffnessFactor'], math.radians(params['angleOffsetAverageDeg']))
   angle_offset_average = params['angleOffsetAverageDeg']
   angle_offset = angle_offset_average
@@ -183,6 +185,8 @@ def main(sm=None, pm=None):
       liveParameters = msg.liveParameters
       liveParameters.posenetValid = True
       liveParameters.sensorValid = True
+      # liveParameters.steerRatio = float(16.5) #float(x[States.STEER_RATIO])
+      # liveParameters.stiffnessFactor = float(0.6) #float(x[States.STIFFNESS])
       liveParameters.steerRatio = float(x[States.STEER_RATIO])
       liveParameters.stiffnessFactor = float(x[States.STIFFNESS])
       liveParameters.roll = float(x[States.ROAD_ROLL])
