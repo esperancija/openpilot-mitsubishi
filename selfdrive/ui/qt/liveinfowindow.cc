@@ -12,22 +12,20 @@ LiveInfoWindow::LiveInfoWindow(QWidget *parent) : QWidget(parent) {
 
 void LiveInfoWindow::updateState(const UIState &s) {
 
-  static int oldSteerRatio;
-  static int  oldSteerActuatorDelay;
   static int i = 0;
 
   const auto gm = (*s.sm)["getmishka"].getGetmishka();
-  state = gm.getState(); 
+  menuState = gm.getState(); 
   delayKoef = gm.getDelayKoef();
   ratioKoef = gm.getRatioKoef();
 
-  const auto lp = (*s.sm)["liveParameters"].getLiveParameters();
-    steerRatio = lp.getSteerRatio();
-    //steerRatio = ratioKoef;
+  //const auto lp = (*s.sm)["liveParameters"].getLiveParameters();
+    //steerRatio = lp.getSteerRatio();
+    steerRatio = ratioKoef;//*5/10;
 
   //const auto cp = (*s.sm)["carParams"].getCarParams();
     // steerActuatorDelay = cp.getSteerActuatorDelay();
-    steerActuatorDelay = delayKoef;
+    steerActuatorDelay = delayKoef; // /500;
 
   
 
@@ -48,8 +46,6 @@ void LiveInfoWindow::updateState(const UIState &s) {
     update();                       // перерисовать
   }
   i++;
-    oldSteerRatio = steerRatio;
-  oldSteerActuatorDelay = steerActuatorDelay;
 }
 
 void LiveInfoWindow::paintEvent(QPaintEvent *) {
@@ -59,14 +55,15 @@ void LiveInfoWindow::paintEvent(QPaintEvent *) {
   p.setFont(QFont("Inter", 10, QFont::Bold));
 
   // строки
-  QString sadStr  = QString("delay  : %1").arg(steerActuatorDelay);
-  QString srStr  = QString("ratio  : %1").arg(steerRatio);
+  QString sadStr  = QString("delay  : %1").arg(steerActuatorDelay/500, 0, 'f', 3);
+//  QString srStr  = QString("ratio  : %1").arg(steerRatio, 0, 'f', 1);
+  QString srStr  = QString("ratio  : %1").arg(steerRatio*5/10, 0, 'f', 1);
 
   // координаты (правый-верхний угол)
   const int margin = 100;
   const int lineH  = p.fontMetrics().height() + 10;
   int x = width()  - p.fontMetrics().horizontalAdvance(sadStr) - margin;
-  int y = margin + lineH;
+  int y = height() - margin - lineH;
 
   // лёгкая тень
   p.setPen(QColor(0,0,0,160));
@@ -75,15 +72,19 @@ void LiveInfoWindow::paintEvent(QPaintEvent *) {
   //p.drawText(x+2, y+2+lineH, battStr);
 
   // основной белый текст
-  if (state == sadChangeState)
+  if (menuState == sadChangeState)
     p.setPen(Qt::green);
-  else if (state == normalState)
+  else if (menuState == normalState)
+    p.setPen(QColor(50, 50, 50));
+  else
     p.setPen(Qt::white);
   p.drawText(x, y, sadStr);
 
-  if (state == srChangeState)  
+  if (menuState == srChangeState)  
     p.setPen(Qt::green);
-  else if (state == normalState)
+  else if (menuState == normalState)
+    p.setPen(QColor(50, 50, 50));
+  else
     p.setPen(Qt::white);
   p.drawText(x, y+lineH, srStr);
 }

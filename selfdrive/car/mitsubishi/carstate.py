@@ -110,11 +110,11 @@ class CarState(CarStateBase):
 
     #use to transfer steerRatioValue
     #ret.yawRate = int(cp.vl["JOYSTICK_COMMAND"]["STEER_RATIO_VAL"])/10
-    ret.yawRate = self.sm['getmishka'].ratioKoef/10
+    ret.yawRate = self.sm['getmishka'].ratioKoef*5/10
     #ret.newSteerActuatorDelay = int(cp.vl["JOYSTICK_COMMAND"]["ACTUATOR_DELAY_VAL"])/500
-    ret.newSteerActuatorDelay = self.sm['getmishka'].delayKoef/500
+    ret.newSteerActuatorDelay  = self.sm['getmishka'].delayKoef/500
 
-    #print ("sad=%d, sr=%d" % (ret.newSteerActuatorDelay, ret.yawRate))
+    #print ("sad=%f, sr=%f" % (ret.newSteerActuatorDelay, ret.yawRate))
     #print (ret.newSteerActuatorDelay)
 
     ret.cruiseState.nonAdaptive = False#cp.vl["ACC_STATUS"]["CRUISE_STATE"] in (1, 2, 3, 4, 5, 6)

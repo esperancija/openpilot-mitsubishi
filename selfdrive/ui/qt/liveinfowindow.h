@@ -19,9 +19,9 @@ protected:
 private:
   int cpu  = -1;      // последние данные
   int batt = -1;
-  int state = 0;
+  int menuState = 0;
   int delayKoef = 0;
   int ratioKoef = 0;
-  int steerRatio = 0;
-  int steerActuatorDelay = 0;
+  float steerRatio = 0;
+  float steerActuatorDelay = 0;
 };

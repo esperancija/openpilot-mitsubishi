@@ -603,7 +603,7 @@ static uint8_t isNeedSetKoefs = 0;
 //send data to comma use MishkaGetData struct
 int mishka_usb_send(void *data){
 
-	MishkaData md = {	.state = steerKey, 
+	MishkaData md = {	.state = mishka.showState, 
 						.delayKoef = mishka.koefs.steerActuatorDelay, 
 						.ratioKoef = mishka.koefs.steerRatio, 
 						.activateOP = onState, 
