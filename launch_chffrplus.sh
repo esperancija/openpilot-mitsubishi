@@ -181,7 +181,7 @@ function launch {
   cd selfdrive/manager
   #./build.py && ./manager.py
 
-  ./manager.py
+ ./manager.py
 
 
   # if broken, keep on screen error

@@ -4,6 +4,8 @@ from opendbc.can.packer import CANPacker
 #from common.dp_common import common_controller_ctrl
 from selfdrive.car.mitsubishi.values import CAR, CarControllerParams
 
+import cereal.messaging as messaging
+
 class CarController():
   def __init__(self, dbc_name, CP, VM):
     # dp
@@ -20,16 +22,21 @@ class CarController():
     self.gone_fast_yet = False
     self.apply_steer_last = 0
     self.packer = CANPacker(dbc_name)
+    self.sm = None
 
-  def create_lkas_command(self, apply_steer, apply_angle, active, ll, rl, frame):
+  def create_lkas_command(self, apply_steer, apply_angle, active, ll, rl, lc, sr, frame):
     values = {
-      "LKAS_STEERING_TORQUE": apply_steer,
+      "LKAS_TEST_DATA_1": sr,
+      "LKAS_LEAD_CAR": lc,
+      "LKAS_STEERING_TORQUE": sr, #apply_steer,
       "LKAS_STEERING_ANGLE": apply_angle,
       "LKAS_ACTIVE": active,
       "LKAS_RIGHT_LINE": rl,
       "LKAS_LEFT_LINE": ll,
       "COUNTER": frame % 0x10,
     }
+    #print ("sr=%d" % (sr)) # dmonitoringd
+
     return self.packer.make_can_msg("LKAS_COMMAND", 0, values)
 
   def update(self, enabled, CS, frame, actuators, pcm_cancel_cmd, hud_alert,
@@ -37,17 +44,22 @@ class CarController():
 
     can_sends = []
 
+    if self.sm is None:
+       self.sm = messaging.SubMaster(['liveParameters'])
+
+    steerRatio = int(round(self.sm['liveParameters'].steerRatio * 10))
+
     new_steer = int(round(actuators.steer * CarControllerParams.STEER_MOMENT_MAX))
     new_steer = -new_steer
 
     apply_steer = apply_std_steer_torque_limits(new_steer, self.apply_steer_last,
                                                    CS.out.steeringTorqueEps, CarControllerParams)
 
-    #print ("ll=%d, rl=%d lead=%d" % (left_line, right_line, lead)) # dmonitoringd
+    #print ("ll=%d, rl=%d lead=%d sr=%d" % (left_line, right_line, lead, steerRatio)) # dmonitoringd
 
     
     new_msg = self.create_lkas_command(int(apply_steer), int(actuators.steeringAngleDeg*2),
-                        int(enabled), int(left_line), int(right_line),  frame)
+                        int(enabled), int(left_line), int(right_line), int(lead), steerRatio,  frame)
 
     #can_sends.append(self.packer.make_can_msg(921, b'\x00\x00\x00\x00\x00\x00\x00\x00', 0))
     can_sends.append(new_msg)
