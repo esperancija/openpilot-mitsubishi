@@ -287,10 +287,11 @@ struct CanData {
 }
 
 struct MishkaGetData{
-  pressedButton @0 :UInt8;
-  btnPressCnt   @1 :UInt8;
-  activateOP    @2 :Bool;
-  crc           @3 :UInt16;  
+  state         @0 :UInt8;
+  delayKoef     @1 :UInt8;
+  ratioKoef     @2 :UInt8;
+  activateOP    @3 :Bool;
+  crc           @4 :UInt16;  
 }
 
 struct DeviceState @0xa4d8b5af2aa492eb {

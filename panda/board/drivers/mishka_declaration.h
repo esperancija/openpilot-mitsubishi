@@ -5,6 +5,18 @@
 
 #define DMA_NUM_CH 16
 
+/**
+ * structure to save in flash koefs
+ */
+typedef struct
+{
+	uint8_t steerRatio;
+	uint8_t steerActuatorDelay;
+	uint16_t reserved;
+	//all params MUST be aligned according to settings.c
+	uint32_t 	crc;
+}Koefs;
+
 typedef struct{
 ///state of device
 	uint16_t rawAdcData[DMA_NUM_CH];
@@ -25,20 +37,28 @@ typedef struct{
 	uint16_t 	opActiveTimer;
 
 	uint8_t  currentState;
-	uint8_t  steerButton;
+	uint8_t  showState;
 	uint8_t  opData;
 	uint8_t  key;
 	uint8_t  oldKey;
 	uint8_t  flags;
+	Koefs koefs;
 }Mishka;
 
-
 typedef struct{
-  uint8_t pressedButton; //button pressed
-  bool activateOP; //
-  uint8_t btnPressCnt; //count of button press
-  uint32_t crc;
+  uint8_t state;
+  uint8_t delayKoef;
+  uint8_t ratioKoef;
+  bool activateOP;
+  uint16_t crc;  
 }MishkaData;
+
+// typedef struct{
+//   uint8_t pressedButton; //button pressed
+//   bool activateOP; //
+//   uint8_t btnPressCnt; //count of button press
+//   uint32_t crc;
+// }MishkaData;
 
 enum Flags {runMomentCalcFlag = 1, callTimeOutFlag = 2};
 enum PidReset {normalPid, resetPid};
@@ -48,7 +68,7 @@ enum State {
 	activeState, 	//steer shake by ldw warning
 	controlState, 	//steer control by external data
 	testState,
-				lastState
+	lastState
 };
 
 enum Key {noKey = 0, lkasOnKey, cancelKey, accOnKey, upKey, downKey};
@@ -56,6 +76,8 @@ enum Key {noKey = 0, lkasOnKey, cancelKey, accOnKey, upKey, downKey};
 enum OPState {
 	opActive = 1, opLeftLine = 2, opRightLine = 4
 };
+
+enum ShowState {showNormalMenuState, showOPMenu1State, showOPMenu2State};
 
 Mishka mishka;
 

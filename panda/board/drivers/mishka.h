@@ -440,31 +440,15 @@ static uint8_t oldSteerKey;
 	   uint8_t steerKey;
 static uint16_t bntPressCnt;
 
+
 //8 hz
 void mishka_tick(void){
-static uint32_t i;
+
+static uint8_t isNeedSetKoefs = 0;
 
 	steerKey = getAccKey();
 	if (steerKey != oldSteerKey){
 		switch (oldSteerKey){
-			case cancelKey:
-				if (mishka.currentState == testState)
-					mishka.steerTestAngle = 0;
-				else if ((IS_BUT_PRESS) && (bntPressCnt > 25))
-					mishka.currentState = testState;
-				break;
-			case accOnKey:
-				if (mishka.currentState == testState)
-					mishka.currentState = controlState;
-				break;
-			case upKey:
-				if (mishka.currentState == testState)
-					mishka.steerTestAngle += 30; //15 degree
-				break;
-			case downKey:
-				if (mishka.currentState == testState)
-					mishka.steerTestAngle -= 30; //15 degree
-				break;
 			case lkasOnKey:
 				onState ^= 1;
 				statusCnt = 0;
@@ -476,13 +460,73 @@ static uint32_t i;
 		onState = 0;
 	}
 
-//set led state
-	if ((mishka.currentState == controlState) || ((mishka.currentState == testState) && (i%2))){
-		GREEN_ON;
-	}else{
-		GREEN_OFF;
-	}
+////*********************************************** change logic ***********************
+		switch (mishka.showState){
+			case showNormalMenuState:
+				if (mishka.currentState == controlState)
+					GREEN_ON;
+				else
+					GREEN_OFF;
 
+				if ((steerKey == cancelKey) && (bntPressCnt > 10)){
+					bntPressCnt = 0;
+					mishka.showState = showOPMenu1State;
+				}
+				break;
+			case showOPMenu1State:
+				if ((statusCnt%2) == 0)
+					GREEN_ON;
+				else
+					GREEN_OFF;
+
+				if ((steerKey == noKey)){
+					if (oldSteerKey == cancelKey){
+						mishka.showState = showOPMenu2State;
+						isNeedSetKoefs = 1;
+					}else if ((oldSteerKey == accOnKey) || (oldSteerKey == lkasOnKey)){
+						mishka.showState = showNormalMenuState;
+						isNeedSetKoefs = 1;
+					}else if (oldSteerKey == upKey){
+						mishka.koefs.steerActuatorDelay++;
+					}else if (oldSteerKey == downKey){
+						mishka.koefs.steerActuatorDelay--;
+					}
+				}
+				break;
+			case showOPMenu2State:
+				if ((statusCnt%4) >= 2)
+					GREEN_ON;
+				else
+					GREEN_OFF;
+
+				if ((steerKey == noKey)){
+					if (oldSteerKey == cancelKey){
+						mishka.showState = showOPMenu1State;
+						isNeedSetKoefs = 1;
+					}else if ((oldSteerKey == accOnKey) || (oldSteerKey == lkasOnKey)){
+						mishka.showState = showNormalMenuState;
+						isNeedSetKoefs = 1;
+					}else if (oldSteerKey == upKey){
+						mishka.koefs.steerRatio++;
+					}else if (oldSteerKey == downKey){
+						mishka.koefs.steerRatio--;
+					}
+				}
+				break;
+			default:
+				mishka.showState = showNormalMenuState;
+				break;
+		}
+
+		if (steerKey){
+			bntPressCnt++;
+		}else{
+			bntPressCnt = 0;
+		}
+
+		oldSteerKey = steerKey;
+
+//set led state
 	if (!(FS_RELAY_STATE))
 		RED_ON;
 	else
@@ -498,15 +542,18 @@ static uint32_t i;
 	oldSteerKey = steerKey;
 
 
-	if (i%2){
+	if (statusCnt%2){
 		puts("\n\r");
 		//puth(mishka.steerPosition); puts(" ");puth(mishka.steerTargetAngle);
 		puts("steerTargetMoment=");puth(mishka.steerTargetMoment);puts("\n\r");
-		puts("steerTargetAngle=");puth(mishka.steerTargetAngle); puts(" "); puth(mishka.steerTestAngle);puts("\n\r");
+		puts("steerTargetAngle=");puth(mishka.steerTargetAngle); puts(" "); 
 		puts("steerPosition=");puth(mishka.steerPosition);puts("\n\r");
 		puts("speed=");puth(mishka.speed);puts("\n\r");
-		puts("currentState=");puth(mishka.currentState);puts(" "); puth(onState); puts("\n\r");
-		puts("button="); puts(keyToString(steerKey));puth(bntPressCnt);puts("\n\r");
+		puts("currentState=");puth(mishka.currentState); puts(" "); puth(onState); puts("\n\r");
+		puts("showState=");puth(mishka.showState);  puts("\n\r");
+		puts("delayKoef=");puth(mishka.koefs.steerActuatorDelay); puts("\n\r");
+		puts("ratioKoef=");puth(mishka.koefs.steerRatio); puts("\n\r");
+		puts("button="); puts(keyToString(steerKey)); puts(" "); puth(bntPressCnt);puts("\n\r");
 		puts("\n\r");
 	//	puth(steerKey); puts(" "); puth(mishka.opData);
 	//	puts("\n\r");
@@ -540,14 +587,28 @@ static uint32_t i;
 //		//set_gpio_output(GPIOC, 12, false);
 //	}
 
-i++;
+	if (isNeedSetKoefs){
+		//setKoefs(&murchik.koefs);
+		isNeedSetKoefs = 0;
+	}
+
+	if (mishka.koefs.steerRatio == 0)
+		mishka.koefs.steerRatio = 43;
+	if (mishka.koefs.steerActuatorDelay == 0)
+		mishka.koefs.steerActuatorDelay = 210;
+
+	statusCnt++;
 }
 
 //send data to comma use MishkaGetData struct
 int mishka_usb_send(void *data){
 
-	MishkaData md = {.pressedButton = steerKey, .btnPressCnt = bntPressCnt, .activateOP = onState, .crc = 0x1983};
+	MishkaData md = {	.state = steerKey, 
+						.delayKoef = mishka.koefs.steerActuatorDelay, 
+						.ratioKoef = mishka.koefs.steerRatio, 
+						.activateOP = onState, 
+						.crc = 0x1983};
 	(void)memcpy(data, &md, sizeof(MishkaData));
   //(uint16_t*)data[0] = rawAdcData[0];
-  return 5;
+  return 6;
 }

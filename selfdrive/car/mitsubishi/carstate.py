@@ -46,7 +46,6 @@ class CarState(CarStateBase):
       self.sm.update(0)
 
 
-    pressedButton = self.sm['getmishka'].pressedButton
     activateOP = self.sm['getmishka'].activateOP
     #print("pressedButton=%d, activateOP=%d" % (pressedButton, activateOP))      
 
@@ -111,9 +110,11 @@ class CarState(CarStateBase):
 
     #use to transfer steerRatioValue
     #ret.yawRate = int(cp.vl["JOYSTICK_COMMAND"]["STEER_RATIO_VAL"])/10
+    ret.yawRate = self.sm['getmishka'].ratioKoef/10
     #ret.newSteerActuatorDelay = int(cp.vl["JOYSTICK_COMMAND"]["ACTUATOR_DELAY_VAL"])/500
+    ret.newSteerActuatorDelay = self.sm['getmishka'].delayKoef/500
 
-    #print ("ACTUATOR_DELAY_VAL %d %d" % (ret.newSteerActuatorDelay, ret.yawRate))
+    #print ("sad=%d, sr=%d" % (ret.newSteerActuatorDelay, ret.yawRate))
     #print (ret.newSteerActuatorDelay)
 
     ret.cruiseState.nonAdaptive = False#cp.vl["ACC_STATUS"]["CRUISE_STATE"] in (1, 2, 3, 4, 5, 6)

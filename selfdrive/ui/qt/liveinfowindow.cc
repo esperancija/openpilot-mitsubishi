@@ -17,14 +17,17 @@ void LiveInfoWindow::updateState(const UIState &s) {
   static int i = 0;
 
   const auto gm = (*s.sm)["getmishka"].getGetmishka();
-  lastBtn = gm.getPressedButton(); 
-  btnPressCnt = gm.getBtnPressCnt();
+  state = gm.getState(); 
+  delayKoef = gm.getDelayKoef();
+  ratioKoef = gm.getRatioKoef();
 
   const auto lp = (*s.sm)["liveParameters"].getLiveParameters();
     steerRatio = lp.getSteerRatio();
+    //steerRatio = ratioKoef;
 
-  const auto cp = (*s.sm)["carParams"].getCarParams();
-    steerActuatorDelay = cp.getSteerActuatorDelay();
+  //const auto cp = (*s.sm)["carParams"].getCarParams();
+    // steerActuatorDelay = cp.getSteerActuatorDelay();
+    steerActuatorDelay = delayKoef;
 
   
 
@@ -51,8 +54,6 @@ void LiveInfoWindow::updateState(const UIState &s) {
 
 void LiveInfoWindow::paintEvent(QPaintEvent *) {
   
-  static int state = 0, oldButton = 0;
-
   QPainter p(this);
   p.setRenderHint(QPainter::Antialiasing);
   p.setFont(QFont("Inter", 10, QFont::Bold));
@@ -62,38 +63,10 @@ void LiveInfoWindow::paintEvent(QPaintEvent *) {
   QString srStr  = QString("ratio  : %1").arg(steerRatio);
 
   // координаты (правый-верхний угол)
-  const int margin = 40;//32;
+  const int margin = 100;
   const int lineH  = p.fontMetrics().height() + 10;
   int x = width()  - p.fontMetrics().horizontalAdvance(sadStr) - margin;
   int y = margin + lineH;
-
-  // if ((oldButton != lastBtn)){
-  //   switch (oldButton){
-  //     case cancelKey:
-  //       if (((state == normalState) && (btnPressCnt > 24)) || 
-  //           ((state == sadChangeState) && (btnPressCnt > 0)) || 
-  //              ((state == srChangeState) && (btnPressCnt > 0))){
-  //         state++;
-  //       }
-  //     case lkasOnKey:
-  //     case accOnKey:
-  //       state = normalState;
-  //       break;
-  //     case upKey:
-  //       if (state == sadChangeState){
-
-  //       }
-  //       break;
-  //     case downKey:
-  //        if (state == srChangeState){
-          
-  //       }
-  //       break;
-  //     default:
-  //   }
-  // }
-  // if (state >= lastState )
-  //   state = sadChangeState;
 
   // лёгкая тень
   p.setPen(QColor(0,0,0,160));
@@ -102,16 +75,15 @@ void LiveInfoWindow::paintEvent(QPaintEvent *) {
   //p.drawText(x+2, y+2+lineH, battStr);
 
   // основной белый текст
-  p.setPen(Qt::white);
-  if ((lastBtn == cancelKey) && (btnPressCnt > 24))
+  if (state == sadChangeState)
     p.setPen(Qt::green);
-  else if (state == sadChangeState)
-    p.setPen(Qt::red);
-  else if (state == srChangeState)  
-    p.setPen(Qt::blue);
+  else if (state == normalState)
+    p.setPen(Qt::white);
   p.drawText(x, y, sadStr);
-  p.drawText(x, y+lineH, srStr);
-  // p.drawText(x, y+lineH, battStr);
 
-  oldButton = lastBtn;
+  if (state == srChangeState)  
+    p.setPen(Qt::green);
+  else if (state == normalState)
+    p.setPen(Qt::white);
+  p.drawText(x, y+lineH, srStr);
 }

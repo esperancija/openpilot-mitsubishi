@@ -620,13 +620,20 @@ void pigeon_thread(Panda *panda) {
 //   pm.send("ubloxRaw", msg);
 // }
 
+  // state         @0 :UInt8;
+  // delayKoef     @1 :UInt8;
+  // ratioKoef     @2 :UInt8;
+  // activateOP    @3 :Bool;
+  // crc           @4 :UInt16;  
+
 static void mishka_publish_data(PubMaster &pm, MishkaData data) {
   // create message
   MessageBuilder msg;
   auto event = msg.initEvent();
   auto getmishka = event.initGetmishka();  // This returns a MishkaGetData::Builder
-  getmishka.setPressedButton(data.pressedButton);
-  getmishka.setBtnPressCnt(data.btnPressCnt);
+  getmishka.setState(data.state);
+  getmishka.setDelayKoef(data.delayKoef);
+  getmishka.setRatioKoef(data.ratioKoef);
   getmishka.setActivateOP(data.activateOP);
   getmishka.setCrc(data.crc);
   pm.send("getmishka", msg);
@@ -653,7 +660,7 @@ void mishka_thread(Panda *panda) {
     panda->mishka_receive(&getdata);
     mishka_publish_data(pm, getdata);
 
-    util::sleep_for(50);  //in ms
+    util::sleep_for(100);  //in ms
 
     if (!msg) {
       if (errno == EINTR) {

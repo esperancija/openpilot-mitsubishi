@@ -42,11 +42,18 @@ struct can_frame {
 	long src;
 };
 
+  // state         @0 :UInt8;
+  // delayKoef     @1 :UInt8;
+  // ratioKoef     @2 :UInt8;
+  // activateOP    @3 :Bool;
+  // crc           @4 :UInt16;  
+
 typedef struct{
-  uint8_t pressedButton;
+  uint8_t state;
+  uint8_t delayKoef;
+  uint8_t ratioKoef;
   bool activateOP;
-  uint8_t btnPressCnt; //count of button press
-  uint32_t crc;  
+  uint16_t crc;  
 }MishkaData;
 
 class Panda {

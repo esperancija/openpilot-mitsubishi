@@ -475,5 +475,5 @@ bool Panda::unpack_can_buffer(uint8_t *data, int size, std::vector<can_frame> &o
 
 void Panda::mishka_receive(MishkaData *md){
 
-  usb_read(0xb4, 0, 0, (unsigned char*)md, sizeof(md));
+  usb_read(0xb4, 0, 0, (unsigned char*)md, sizeof(MishkaData));
 }
