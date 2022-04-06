@@ -1,4 +1,8 @@
+from dataclasses import dataclass
+from typing import Dict, List, Union
+
 from selfdrive.car import dbc_dict
+from selfdrive.car.docs_definitions import CarInfo
 from cereal import car
 Ecu = car.CarParams.Ecu
 
@@ -15,6 +19,7 @@ class CarControllerParams:
     self.STEER_DRIVER_MULTIPLIER = 10  # weight driver torque heavily
     self.STEER_DRIVER_FACTOR = 1       # from dbc
 
+
 class CAR:
   ASCENT = "SUBARU ASCENT LIMITED 2019"
   IMPREZA = "SUBARU IMPREZA LIMITED 2019"
@@ -24,6 +29,30 @@ class CAR:
   LEGACY_PREGLOBAL = "SUBARU LEGACY 2015 - 2018"
   OUTBACK_PREGLOBAL = "SUBARU OUTBACK 2015 - 2017"
   OUTBACK_PREGLOBAL_2018 = "SUBARU OUTBACK 2018 - 2019"
+
+
+@dataclass
+class SubaruCarInfo(CarInfo):
+  package: str = "EyeSight"
+
+
+CAR_INFO: Dict[str, Union[SubaruCarInfo, List[SubaruCarInfo]]] = {
+  CAR.ASCENT: SubaruCarInfo("Subaru Ascent 2019-20"),
+  CAR.IMPREZA: [
+    SubaruCarInfo("Subaru Impreza 2017-19", good_torque=True),
+    SubaruCarInfo("Subaru Crosstrek 2018-19", good_torque=True),
+  ],
+  CAR.IMPREZA_2020: [
+    SubaruCarInfo("Subaru Impreza 2020-21"),
+    SubaruCarInfo("Subaru Crosstrek 2020-21"),
+  ],
+  CAR.FORESTER: SubaruCarInfo("Subaru Forester 2019-21", good_torque=True),
+  CAR.FORESTER_PREGLOBAL: SubaruCarInfo("Subaru Forester 2017-18"),
+  CAR.LEGACY_PREGLOBAL: SubaruCarInfo("Subaru Legacy 2015-18"),
+  CAR.OUTBACK_PREGLOBAL: SubaruCarInfo("Subaru Outback 2015-17"),
+  CAR.OUTBACK_PREGLOBAL_2018: SubaruCarInfo("Subaru Outback 2018-19"),
+}
+
 
 FINGERPRINTS = {
   CAR.IMPREZA_2020: [{
@@ -53,6 +82,7 @@ FW_VERSIONS = {
       b'\x00\x00d\xb9\x1f@ \x10',
       b'\000\000e~\037@ \'',
       b'\x00\x00e@\x1f@ $',
+      b'\x00\x00d\xb9\x00\x00\x00\x00',
     ],
     (Ecu.engine, 0x7e0, None): [
       b'\xbb,\xa0t\a',
@@ -65,6 +95,7 @@ FW_VERSIONS = {
       b'\x00\xfe\xf7\x00\x00',
       b'\001\xfe\xf9\000\000',
       b'\x01\xfe\xf7\x00\x00',
+      b'\xf1\x00\xa4\x10@',
     ],
   },
   CAR.IMPREZA: {
@@ -72,12 +103,14 @@ FW_VERSIONS = {
       b'\x7a\x94\x3f\x90\x00',
       b'\xa2 \x185\x00',
       b'\xa2 \x193\x00',
+      b'\xa2 \x194\x00',
       b'z\x94.\x90\x00',
       b'z\x94\b\x90\x01',
       b'\xa2 \x19`\x00',
       b'z\x94\f\x90\001',
       b'z\x9c\x19\x80\x01',
       b'z\x94\x08\x90\x00',
+      b'z\x84\x19\x90\x00',
     ],
     (Ecu.eps, 0x746, None): [
       b'\x7a\xc0\x0c\x00',
@@ -132,6 +165,7 @@ FW_VERSIONS = {
       b'\xe4\xf5\002\000\000',
       b'\xe3\xd0\x081\x00',
       b'\xe3\xf5\x06\x00\x00',
+      b'\xf1\x00\xa4\x10@',
     ],
   },
   CAR.IMPREZA_2020: {
