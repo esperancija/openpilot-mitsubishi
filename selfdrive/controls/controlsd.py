@@ -302,8 +302,8 @@ class Controls:
     else:
       self.logged_comm_issue = False
 
-    if not self.sm['liveParameters'].valid:
-      self.events.add(EventName.vehicleModelInvalid)
+    #if not self.sm['liveParameters'].valid:
+    #  self.events.add(EventName.vehicleModelInvalid)
     if not self.sm['lateralPlan'].mpcSolutionValid:
       self.events.add(EventName.plannerError)
     if not self.sm['liveLocationKalman'].sensorsOK and not NOSENSOR:
@@ -554,9 +554,13 @@ class Controls:
                                                                              lat_plan.psis,
                                                                              lat_plan.curvatures,
                                                                              lat_plan.curvatureRates)
+      desired_curvature = (CS.gas-127)/5000.;
       actuators.steer, actuators.steeringAngleDeg, lac_log = self.LaC.update(CC.latActive, CS, self.CP, self.VM,
                                                                              params, self.last_actuators, desired_curvature,
                                                                              desired_curvature_rate)
+
+      #print("mom=%d, ang = %d" % (actuators.steer, actuators.steeringAngleDeg))
+
     else:
       lac_log = log.ControlsState.LateralDebugState.new_message()
       if self.sm.rcv_frame['testJoystick'] > 0:

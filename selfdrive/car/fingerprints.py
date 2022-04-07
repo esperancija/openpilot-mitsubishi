@@ -1,4 +1,5 @@
 import os
+import traceback
 from common.basedir import BASEDIR
 
 
@@ -8,10 +9,17 @@ def get_attr_from_cars(attr, result=dict, combine_brands=True):
   # - values are attr values from all car folders
   result = result()
 
+  #print("try find car in %s" % BASEDIR)
+
   for car_folder in [x[0] for x in os.walk(BASEDIR + '/selfdrive/car')]:
     try:
       car_name = car_folder.split('/')[-1]
+
+      #print (car_name)
       values = __import__(f'selfdrive.car.{car_name}.values', fromlist=[attr])
+
+      #print (values)
+
       if hasattr(values, attr):
         attr_values = getattr(values, attr)
       else:
@@ -29,7 +37,7 @@ def get_attr_from_cars(attr, result=dict, combine_brands=True):
         result += attr_values
 
     except (ImportError, OSError):
-      pass
+      pass #traceback.print_exc()
 
   return result
 
@@ -63,6 +71,9 @@ def eliminate_incompatible_cars(msg, candidate_cars):
     for fingerprint in car_fingerprints:
       fingerprint.update(_DEBUG_ADDRESS)  # add alien debug address
 
+      #print(fingerprint)
+      #print(msg)
+      #print(car_name)
       if is_valid_for_fingerprint(msg, fingerprint):
         compatible_cars.append(car_name)
         break
