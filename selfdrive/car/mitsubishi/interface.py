@@ -31,15 +31,16 @@ class CarInterface(CarInterfaceBase):
     #ret.safetyConfigs[0].safetyParam = 1 #EPS_SCALE[candidate] 0x399
 
     ret.steerActuatorDelay = 0.1
-    ret.steerLimitTimer = 0.4
-    ret.steerRateCost = 0.7
-    ret.steerRatio = 14.3
+    ret.steerLimitTimer = 1 #0.4
+    ret.steerRateCost = 20 #0.7
+    ret.steerRatio = 10 #14.3
 
 
-    ret.lateralTuning.pid.kf = 0.000039
-    ret.lateralTuning.pid.kiBP, ret.lateralTuning.pid.kpBP = [[0., 10., 20.], [0., 10., 20.]]
+    ret.lateralTuning.pid.kf = 0.00001 #0.000039
+    #ret.lateralTuning.pid.kiBP, ret.lateralTuning.pid.kpBP = [[0., 10., 20.], [0., 10., 20.]]
     #ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.01, 0.05, 0.2], [0.003, 0.018, 0.025]]
-    ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.001, 0.001, 0.001], [0.001, 0.001, 0.001]]
+    ret.lateralTuning.pid.kiBP, ret.lateralTuning.pid.kpBP = [[0., 20.], [0.,20.]]
+    ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.04, 0.04], [5, 5]]
 
 
     ret.stoppingControl = False  # Toyota starts braking more when it thinks you want to stop

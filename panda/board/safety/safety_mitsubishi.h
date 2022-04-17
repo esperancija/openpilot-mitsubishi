@@ -73,6 +73,7 @@ static int mitsubishi_rx_hook(CANPacket_t *to_push) {
   return true;
 }
 
+//static int mitsubishi_tx_hook(CANPacket_t *to_send) {
 static int mitsubishi_tx_hook(CANPacket_t *to_send, bool longitudinal_allowed) {
 
   int tx = 0;
@@ -82,11 +83,10 @@ static int mitsubishi_tx_hook(CANPacket_t *to_send, bool longitudinal_allowed) {
 //  if (!msg_allowed(to_send, MITSUBISHI_TX_MSGS, sizeof(MITSUBISHI_TX_MSGS)/sizeof(MITSUBISHI_TX_MSGS[0]))) {
 //    tx = 0;
 //  }
-
     if (longitudinal_allowed)
-       tx = 0;
+	tx = 0;
 
-    if (to_send->addr == 0x3b6)
+    if (GET_ADDR(to_send) == 0x3b6)
         tx = 1;
 
 //  if (relay_malfunction) {

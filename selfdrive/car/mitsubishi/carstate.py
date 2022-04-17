@@ -87,10 +87,13 @@ class CarState(CarStateBase):
     ret.leftBlinker, ret.rightBlinker = self.update_blinker_from_lamp(
       50, cp.vl["WARNING_SIGNALS"]["TURN_LEFT_SIGNAL"], cp.vl["WARNING_SIGNALS"]["TURN_RIGHT_SIGNAL"])
 
-    ret.steeringTorque = 0 #cp.vl["STEER_MOMENT_SENSOR"]["STEER_MOMENT"]
-    ret.steeringTorqueEps = 0 #cp.vl["STEER_MOMENT_SENSOR"]["STEER_MOMENT_EPS"]
+    ret.steeringTorque = -cp.vl["STEER_MOMENT_SENSOR"]["STEER_MOMENT"]
+    ret.steeringTorqueEps = cp.vl["STEER_MOMENT_SENSOR"]["STEER_MOMENT_EPS"]
+
+    ret.steeringTorqueEps *= ret.steeringTorque
 
     #print("trq=%d, trqeps=%d" % (ret.steeringTorque, ret.steeringTorqueEps))
+    #print (ret.steeringAngleDeg)
 
     # we could use the override bit from dbc, but it's triggered at too high torque values
     ret.steeringPressed = abs(ret.steeringTorque) > 1
