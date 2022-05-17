@@ -25,6 +25,7 @@
 #include "selfdrive/ui/ui.h"
 #include "selfdrive/ui/qt/util.h"
 #include "selfdrive/ui/qt/qt_window.h"
+#include "selfdrive/ui/qt/widgets/opkr.h"
 
 TogglesPanel::TogglesPanel(SettingsWindow *parent) : ListWidget(parent) {
   // param, title, desc, icon
@@ -343,6 +344,38 @@ QWidget *network_panel(QWidget *parent) {
 #endif
 }
 
+
+
+TuningPanel::TuningPanel(QWidget *parent) : ListWidget(parent) {
+  QVBoxLayout *layout = new QVBoxLayout(this);
+
+  layout->setContentsMargins(50, 0, 50, 0);
+  layout->setSpacing(30);
+
+  // OPKR
+  layout->addWidget(new LabelControl("〓〓〓〓〓〓〓〓【 TUNING 】〓〓〓〓〓〓〓〓", ""));
+  //layout->addWidget(new CameraOffset());
+  //layout->addWidget(new PathOffset());
+  //layout->addWidget(new LiveSteerRatioToggle());
+  //layout->addWidget(new LiveSRPercent());
+  //layout->addWidget(new SRBaseControl());
+  //layout->addWidget(new SRMaxControl());
+  //layout->addWidget(new SteerActuatorDelay());
+  //layout->addWidget(new SteerRateCost());
+  //layout->addWidget(new SteerLimitTimer());
+  //layout->addWidget(new TireStiffnessFactor());
+}
+
+
+
+
+
+
+
+
+
+
+
 void SettingsWindow::showEvent(QShowEvent *event) {
   panel_widget->setCurrentIndex(0);
   nav_btns->buttons()[0]->setChecked(true);
@@ -391,6 +424,7 @@ SettingsWindow::SettingsWindow(QWidget *parent) : QFrame(parent) {
     {"Network", network_panel(this)},
     {"Toggles", new TogglesPanel(this)},
     {"Software", new SoftwarePanel(this)},
+    {"Tuning", new TuningPanel(this)},
   };
 
 #ifdef ENABLE_MAPS

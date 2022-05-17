@@ -77,6 +77,13 @@ private:
   QFileSystemWatcher *fs_watch;
 };
 
+
+class TuningPanel : public ListWidget {
+  Q_OBJECT
+public:
+  explicit TuningPanel(QWidget *parent = nullptr);
+};
+
 class C2NetworkPanel: public QWidget {
   Q_OBJECT
 public:

@@ -13,6 +13,7 @@ TRAJECTORY_SIZE = 33
 # the model knows the difference between TICI and EON
 # so a path offset is not needed
 PATH_OFFSET = 0.00
+#PATH_OFFSET = -(float(Decimal(Params().get("PathOffsetAdj", encoding="utf8")) * Decimal('0.001')))  # default 0.0
 if EON:
   CAMERA_OFFSET = -0.06
 elif TICI:

@@ -44,12 +44,12 @@ class CarState(CarStateBase):
 
     ret.brakePressed = cp.vl["BRAKE_MODULE"]["BRAKE_PRESSED"] != 0
 
-    #ret.gas = cp.vl["GAS_PEDAL"]["GAS_PEDAL"]
-    #ret.gasPressed = ret.gas > 2
+    ret.gas = cp.vl["GAS_PEDAL"]["GAS_PEDAL"]
+    ret.gasPressed = ret.gas > 2
 
     #print("gas = %d" % (ret.gas))
-    ret.gas = cp.vl["JOYSTICK_COMMAND"]["TEST_DATA"]
-    ret.gasPressed = False
+    #ret.gas = cp.vl["JOYSTICK_COMMAND"]["TEST_DATA"]
+    #ret.gasPressed = False
 
     # erpm = int(cp.vl["ENGINE_RPM_ID"]["ENGINE_RPM"])
     # erpm = ((erpm & 0xff) << 8) + ((erpm >> 8)  & 0xff)
@@ -62,10 +62,10 @@ class CarState(CarStateBase):
     ret.wheelSpeeds.rl = self.swapBytesUnsigned(int(cp.vl["WHEEL_SPEEDS_1"]["WHEEL_SPEED_RL"])) * CV.KPH_TO_MS * speed_factor
     ret.wheelSpeeds.rr = self.swapBytesUnsigned(int(cp.vl["WHEEL_SPEEDS_2"]["WHEEL_SPEED_RR"])) * CV.KPH_TO_MS * speed_factor
 
-    ret.wheelSpeeds.fl = cp.vl["GAS_PEDAL"]["GAS_PEDAL"]
-    ret.wheelSpeeds.fr =  cp.vl["GAS_PEDAL"]["GAS_PEDAL"]
-    ret.wheelSpeeds.rl = cp.vl["GAS_PEDAL"]["GAS_PEDAL"]
-    ret.wheelSpeeds.rr = cp.vl["GAS_PEDAL"]["GAS_PEDAL"]
+    #ret.wheelSpeeds.fl = cp.vl["GAS_PEDAL"]["GAS_PEDAL"]
+    #ret.wheelSpeeds.fr =  cp.vl["GAS_PEDAL"]["GAS_PEDAL"]
+    #ret.wheelSpeeds.rl = cp.vl["GAS_PEDAL"]["GAS_PEDAL"]
+    #ret.wheelSpeeds.rr = cp.vl["GAS_PEDAL"]["GAS_PEDAL"]
 
 
     ret.vEgoRaw = mean([ret.wheelSpeeds.fl, ret.wheelSpeeds.fr, ret.wheelSpeeds.rl, ret.wheelSpeeds.rr])

@@ -44,8 +44,7 @@ class CarController():
 		# 						CS.out.steeringTorque, CS.out.steeringTorqueEps, CS.out.steeringRateDeg)) # dmonitoringd
 
     
-    new_msg = self.create_lkas_command(int(apply_steer), int(actuators.steeringAngleDeg), frame)
-    #new_msg = self.create_lkas_command(4096, frame)
+    new_msg = self.create_lkas_command(int(apply_steer), int(actuators.steeringAngleDeg*2), frame)
 
     #can_sends.append(self.packer.make_can_msg(921, b'\x00\x00\x00\x00\x00\x00\x00\x00', 0))
     can_sends.append(new_msg)
