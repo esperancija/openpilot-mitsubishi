@@ -78,7 +78,9 @@ class CarState(CarStateBase):
     sta /= 2
     ret.steeringAngleDeg = sta
 
-    ret.steeringRateDeg = self.swapBytesSigned(int(cp.vl["STEER_ANGLE_SENSOR"]["STEER_RATE"]))
+    srd = self.swapBytesSigned(int(cp.vl["STEER_ANGLE_SENSOR"]["STEER_RATE"]))
+    srd -= 4096
+    ret.steeringRateDeg = srd
 
     can_gear = int(cp.vl["GEARBOX"]["GEAR_SHIFTER"])
     ret.gearShifter = self.parse_gear_shifter(self.shifter_values.get(can_gear, None))
@@ -96,7 +98,7 @@ class CarState(CarStateBase):
     #print (ret.steeringAngleDeg)
 
     # we could use the override bit from dbc, but it's triggered at too high torque values
-    ret.steeringPressed = abs(ret.steeringTorque) > 1
+    ret.steeringPressed = abs(ret.steeringTorque) > 3
     #ret.steerWarning = False#0
 
     #ret.cruiseState.available = cp.vl["ACC_STATUS"]["CRUISE_ON"] != 0

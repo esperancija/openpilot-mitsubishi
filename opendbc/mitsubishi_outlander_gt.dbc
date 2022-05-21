@@ -105,5 +105,5 @@ BO_ 952 JOYSTICK_COMMAND: 6 XXX
  SG_ OP_ON : 9|1@1+ (1,0) [0|1] "" XXX
 
 
-VAL_ 869 GEAR_SHIFTER 3 "P" 1 "R" 2 "N" 0 "D" 5 "L";
+VAL_ 869 GEAR_SHIFTER 0 "P" 1 "R" 2 "N" 3 "D" 5 "L";
 
