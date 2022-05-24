@@ -30,10 +30,10 @@ class CarInterface(CarInterfaceBase):
     ret.safetyConfigs = [get_safety_config(car.CarParams.SafetyModel.mitsubishi)]
     #ret.safetyConfigs[0].safetyParam = 1 #EPS_SCALE[candidate] 0x399
 
-    ret.steerActuatorDelay = 0.05
+    ret.steerActuatorDelay = 0.07 #0.05
     ret.steerLimitTimer = 1 #0.4
     ret.steerRateCost = 0.1
-    ret.steerRatio = 13.00 #13.5 #14.3
+    ret.steerRatio = 11.5 #13.00 #13.5 #14.3
 
 
     ret.lateralTuning.pid.kf = 0. #0.000039
