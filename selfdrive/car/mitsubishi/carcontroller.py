@@ -21,10 +21,13 @@ class CarController():
     self.apply_steer_last = 0
     self.packer = CANPacker(dbc_name)
 
-  def create_lkas_command(self, apply_steer, apply_angle, frame):
+  def create_lkas_command(self, apply_steer, apply_angle, active, ll, rl, frame):
     values = {
       "LKAS_STEERING_TORQUE": apply_steer,
       "LKAS_STEERING_ANGLE": apply_angle,
+      "LKAS_ACTIVE": active,
+      "LKAS_RIGHT_LINE": rl,
+      "LKAS_LEFT_LINE": ll,
       "COUNTER": frame % 0x10,
     }
     return self.packer.make_can_msg("LKAS_COMMAND", 0, values)
@@ -40,11 +43,11 @@ class CarController():
     apply_steer = apply_std_steer_torque_limits(new_steer, self.apply_steer_last,
                                                    CS.out.steeringTorqueEps, CarControllerParams)
 
-    # print ("new steerMoment %d; steerAngle %d %d; steerMom %d %d; stSpeed %d" % (apply_steer, CS.out.steeringAngleDeg, actuators.steeringAngleDeg,
-		# 						CS.out.steeringTorque, CS.out.steeringTorqueEps, CS.out.steeringRateDeg)) # dmonitoringd
+    #print ("ll=%d, rl=%d lead=%d" % (left_line, right_line, lead)) # dmonitoringd
 
     
-    new_msg = self.create_lkas_command(int(apply_steer), int(actuators.steeringAngleDeg*2), frame)
+    new_msg = self.create_lkas_command(int(apply_steer), int(actuators.steeringAngleDeg*2),
+                        int(enabled), int(left_line), int(right_line),  frame)
 
     #can_sends.append(self.packer.make_can_msg(921, b'\x00\x00\x00\x00\x00\x00\x00\x00', 0))
     can_sends.append(new_msg)

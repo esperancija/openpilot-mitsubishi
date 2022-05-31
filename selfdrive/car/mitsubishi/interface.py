@@ -28,12 +28,13 @@ class CarInterface(CarInterfaceBase):
     ret.lateralTuning.init('pid')
 
     ret.safetyConfigs = [get_safety_config(car.CarParams.SafetyModel.mitsubishi)]
-    #ret.safetyConfigs[0].safetyParam = 1 #EPS_SCALE[candidate] 0x399
+    #ret.safetyConfigs[0].safetyParam = 1 #EPS_SCALE[candidate] 0x399 modelV2
 
-    ret.steerActuatorDelay = 0.07 #0.05
     ret.steerLimitTimer = 1 #0.4
-    ret.steerRateCost = 0.1
-    ret.steerRatio = 11.5 #13.00 #13.5 #14.3
+    ret.steerRateCost = 0.15
+
+    ret.steerActuatorDelay = 0.4 #0.05
+    ret.steerRatio = 13 #12.4 #13.00
 
 
     ret.lateralTuning.pid.kf = 0. #0.000039
