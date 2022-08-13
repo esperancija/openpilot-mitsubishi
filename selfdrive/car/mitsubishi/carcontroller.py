@@ -55,7 +55,7 @@ class CarController():
     apply_steer = apply_std_steer_torque_limits(new_steer, self.apply_steer_last,
                                                    CS.out.steeringTorqueEps, CarControllerParams)
 
-    #print ("ll=%d, rl=%d lead=%d sr=%d" % (left_line, right_line, lead, steerRatio)) # dmonitoringd
+    print ("ll=%d, rl=%d lead=%d sr=%d" % (left_line, right_line, lead, steerRatio)) # dmonitoringd
 
     
     new_msg = self.create_lkas_command(int(apply_steer), int(actuators.steeringAngleDeg*2),
