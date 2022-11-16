@@ -98,7 +98,7 @@ class CarState(CarStateBase):
     #print (ret.steeringAngleDeg)
 
     # we could use the override bit from dbc, but it's triggered at too high torque values
-    ret.steeringPressed = abs(ret.steeringTorque) > 3
+    ret.steeringPressed = abs(ret.steeringTorque) > 100
     #ret.steerWarning = False#0
 
     #ret.cruiseState.available = cp.vl["ACC_STATUS"]["CRUISE_ON"] != 0

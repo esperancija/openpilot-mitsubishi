@@ -34,8 +34,8 @@ class CarInterface(CarInterfaceBase):
     ret.steerRateCost = 0.05 #0.02 #0.15
 
     ret.steerActuatorDelay = 0.3 #0.45 #0.55 #5 #0.05
-    ret.steerRatio = 17 #11 #18 # 14 #10.15  #12.4 #13.00
-    tire_stiffness_factor = 0.5 #0.7933
+    ret.steerRatio = 16.5 #18 #17 #11 #18 # 14 #10.15  #12.4 #13.00
+    tire_stiffness_factor = 0.9 #0.7933
 
 	
 
