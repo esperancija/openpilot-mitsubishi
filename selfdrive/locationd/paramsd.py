@@ -15,7 +15,7 @@ from selfdrive.locationd.models.constants import GENERATED_DIR
 from selfdrive.swaglog import cloudlog
 
 
-MAX_ANGLE_OFFSET_DELTA = 20 * DT_MDL  # Max 20 deg/s
+MAX_ANGLE_OFFSET_DELTA = 30 * DT_MDL  # Max 20 deg/s
 ROLL_MAX_DELTA = np.radians(20.0) * DT_MDL  # 20deg in 1 second is well within curvature limits
 ROLL_MIN, ROLL_MAX = math.radians(-10), math.radians(10)
 
@@ -155,7 +155,7 @@ def main(sm=None, pm=None):
 
   # When driving in wet conditions the stiffness can go down, and then be too low on the next drive
   # Without a way to detect this we have to reset the stiffness every drive
-  params['stiffnessFactor'] = 0.4 #1.0
+  params['stiffnessFactor'] = 1.0
   learner = ParamsLearner(CP, params['steerRatio'], params['stiffnessFactor'], math.radians(params['angleOffsetAverageDeg']))
   angle_offset_average = params['angleOffsetAverageDeg']
   angle_offset = angle_offset_average
@@ -185,10 +185,17 @@ def main(sm=None, pm=None):
       liveParameters = msg.liveParameters
       liveParameters.posenetValid = True
       liveParameters.sensorValid = True
-      # liveParameters.steerRatio = float(16.5) #float(x[States.STEER_RATIO])
-      # liveParameters.stiffnessFactor = float(0.6) #float(x[States.STIFFNESS])
-      liveParameters.steerRatio = float(x[States.STEER_RATIO])
-      liveParameters.stiffnessFactor = float(x[States.STIFFNESS])
+
+      params = Params()
+      if params.get_bool("DisengageOnAccelerator"):
+        liveParameters.steerRatio = float(17)  # float(x[States.STEER_RATIO])
+        liveParameters.stiffnessFactor = float(0.45)  # float(x[States.STIFFNESS]) disengage on accelerator
+      else:
+        liveParameters.steerRatio = float(19) #float(x[States.STEER_RATIO])
+        liveParameters.stiffnessFactor = float(x[States.STIFFNESS])
+      #liveParameters.steerRatio = float(12) #13.5float(x[States.STEER_RATIO])
+      #liveParameters.stiffnessFactor = float(0.35) #0.45float(x[States.STIFFNESS])
+
       liveParameters.roll = float(x[States.ROAD_ROLL])
       liveParameters.angleOffsetAverageDeg = angle_offset_average
       liveParameters.angleOffsetDeg = angle_offset
