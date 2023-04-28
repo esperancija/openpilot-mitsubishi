@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+0#!/usr/bin/env python3
 from cereal import car
 from common.conversions import Conversions as CV
 from selfdrive.car import STD_CARGO_KG, scale_rot_inertia, scale_tire_stiffness, gen_empty_fingerprint, get_safety_config
@@ -33,8 +33,8 @@ class CarInterface(CarInterfaceBase):
     ret.steerLimitTimer = 1 #0.4
     ret.steerRateCost = 0.5#0.1 #0.05 #0.02 #0.15
 
-    ret.steerActuatorDelay =0.2  # 0.218 #0.22 #0.4 #0.55 #5 #0.05
-    ret.steerRatio = 17 #20 #18# 11 #9 #6 #7 #8 #16.5 #18 #17 #11 #18 # 14 #10.15  #12.4 #13.00
+    ret.steerActuatorDelay =0.23 #3  # 0.218 #0.22 #0.4 #0.55 #5 #0.05
+    ret.steerRatio = 16 #20 #18# 11 #9 #6 #7 #8 #16.5 #18 #17 #11 #18 # 14 #10.15  #12.4 #13.00
     tire_stiffness_factor = 0.5#0.4 #0.7933
 
 	

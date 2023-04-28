@@ -188,10 +188,12 @@ def main(sm=None, pm=None):
 
       params = Params()
       if params.get_bool("DisengageOnAccelerator"):
-        liveParameters.steerRatio = float(17)  # float(x[States.STEER_RATIO])
-        liveParameters.stiffnessFactor = float(0.45)  # float(x[States.STIFFNESS]) disengage on accelerator
+        #liveParameters.steerRatio = float(17)  # float(x[States.STEER_RATIO])
+        #liveParameters.stiffnessFactor = float(0.45)  # float(x[States.STIFFNESS]) disengage on accelerator
+        liveParameters.steerRatio = sm['carState'].yawRate
+        liveParameters.stiffnessFactor = float(1)
       else:
-        liveParameters.steerRatio = float(19) #float(x[States.STEER_RATIO])
+        liveParameters.steerRatio = float(x[States.STEER_RATIO])
         liveParameters.stiffnessFactor = float(x[States.STIFFNESS])
       #liveParameters.steerRatio = float(12) #13.5float(x[States.STEER_RATIO])
       #liveParameters.stiffnessFactor = float(0.35) #0.45float(x[States.STIFFNESS])

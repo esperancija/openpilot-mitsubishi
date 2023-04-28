@@ -47,7 +47,7 @@ class CarController():
     can_sends = []
 
     if self.sm is None:
-       self.sm = messaging.SubMaster(['liveParameters'])
+       self.sm = messaging.SubMaster(['liveParameters','carState']) #sm['carState'].yawRate
     else:
       self.sm.update(0)
 
@@ -56,8 +56,10 @@ class CarController():
     steerRatio = int(round(self.sm['liveParameters'].steerRatio * 10))
     #steerRatio = int(actuators.accel)
 
-    stiff = int(round(self.sm['liveParameters'].stiffnessFactor  * 100))
+    #stiff = int(round(self.sm['liveParameters'].stiffnessFactor  * 100))
     #stiff = int(round(self.sm['liveParameters'].roll * 10))
+    sad = int(round(self.sm['carState'].newSteerActuatorDelay*500))
+    CS.CP.steerActuatorDelay = self.sm['carState'].newSteerActuatorDelay
 
 
     new_steer = int(round(actuators.steer * CarControllerParams.STEER_MOMENT_MAX))
@@ -66,11 +68,11 @@ class CarController():
     apply_steer = apply_std_steer_torque_limits(new_steer, self.apply_steer_last,
                                                    CS.out.steeringTorqueEps, CarControllerParams)
 
-    print ("ll=%d, rl=%d lead=%d sr=%d sf=%d tst=%d" % (left_line, right_line, lead, steerRatio, stiff, angleOffset)) # dmonitoringd
+    print ("ll=%d, rl=%d lead=%d sr=%d sf=%d tst=%d" % (left_line, right_line, lead, steerRatio, sad, angleOffset)) # dmonitoringd
 
     
     new_msg = self.create_lkas_command(int(apply_steer), int(actuators.steeringAngleDeg*2),
-                        int(enabled), int(left_line), int(right_line), int(lead), steerRatio, stiff, angleOffset, frame)
+                        int(enabled), int(left_line), int(right_line), int(lead), steerRatio, sad, angleOffset, frame)
 
     #can_sends.append(self.packer.make_can_msg(921, b'\x00\x00\x00\x00\x00\x00\x00\x00', 0))
     can_sends.append(new_msg)

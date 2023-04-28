@@ -25,6 +25,7 @@ class CarState(CarStateBase):
 
     self.low_speed_lockout = False
     self.acc_type = 1
+    self.newSteerActuatorDelay = 0.3
 
   def swapBytesSigned(self, data):
     ret = ((data & 0xff) << 8) + ((data >> 8)  & 0xff)
@@ -102,8 +103,13 @@ class CarState(CarStateBase):
 
     ret.cruiseState.enabled = bool(cp.vl["JOYSTICK_COMMAND"]["OP_ON"])
     ret.cruiseState.available = bool(cp.vl["JOYSTICK_COMMAND"]["OP_ON"])
-    #print ("cruise %d %d" % (ret.cruiseState.enabled, ret.cruiseState.available))
 
+    #use to transfer steerRatioValue
+    ret.yawRate = int(cp.vl["JOYSTICK_COMMAND"]["STEER_RATIO_VAL"])/10
+    ret.newSteerActuatorDelay = int(cp.vl["JOYSTICK_COMMAND"]["ACTUATOR_DELAY_VAL"])/500
+
+    #print ("ACTUATOR_DELAY_VAL %d %d" % (ret.newSteerActuatorDelay, ret.yawRate))
+    #print (ret.newSteerActuatorDelay)
 
     ret.cruiseState.nonAdaptive = False#cp.vl["ACC_STATUS"]["CRUISE_STATE"] in (1, 2, 3, 4, 5, 6)
     #ret.cruiseActualEnabled = ret.cruiseState.enabled
@@ -153,6 +159,8 @@ class CarState(CarStateBase):
 
   #    ("TEST_DATA", "JOYSTICK_COMMAND", 0),
       ("OP_ON", "JOYSTICK_COMMAND", 0),
+      ("STEER_RATIO_VAL", "JOYSTICK_COMMAND", 0),
+      ("ACTUATOR_DELAY_VAL", "JOYSTICK_COMMAND", 0),
     ]
 
     checks = [
