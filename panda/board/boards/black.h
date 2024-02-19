@@ -8,13 +8,13 @@ void black_enable_can_transceiver(uint8_t transceiver, bool enabled) {
       set_gpio_output(GPIOC, 1, !enabled);
       break;
     case 2U:
-      //set_gpio_output(GPIOC, 13, !enabled);
+      set_gpio_output(GPIOC, 13, !enabled);
       break;
     case 3U:
-      //set_gpio_output(GPIOA, 0, !enabled);
+      set_gpio_output(GPIOA, 0, !enabled);
       break;
     case 4U:
-      //set_gpio_output(GPIOB, 10, !enabled);
+      set_gpio_output(GPIOB, 10, !enabled);
       break;
     default:
       puts("Invalid CAN transceiver ("); puth(transceiver); puts("): enabling failed\n");
