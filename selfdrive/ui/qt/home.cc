@@ -96,7 +96,7 @@ OffroadHome::OffroadHome(QWidget* parent) : QFrame(parent) {
   date = new QLabel();
   header_layout->addWidget(date, 1, Qt::AlignHCenter | Qt::AlignLeft);
 
-  update_notif = new QPushButton("UPDATE");
+  update_notif = new QPushButton("ОБНОВЛЕНИЕ");
   update_notif->setVisible(false);
   update_notif->setStyleSheet("background-color: #364DEF;");
   QObject::connect(update_notif, &QPushButton::clicked, [=]() { center_layout->setCurrentIndex(1); });
@@ -153,7 +153,7 @@ OffroadHome::OffroadHome(QWidget* parent) : QFrame(parent) {
       font-weight: 500;
     }
     OffroadHome > QLabel {
-      font-size: 55px;
+      font-size: 46px;
     }
   )");
 }
@@ -168,7 +168,8 @@ void OffroadHome::hideEvent(QHideEvent *event) {
 }
 
 void OffroadHome::refresh() {
-  date->setText(QDateTime::currentDateTime().toString("dddd, MMMM d"));
+ 
+  date->setText(QDateTime::currentDateTime().toString("dd / MM / yyyy г."));
 
   bool updateAvailable = update_widget->refresh();
   int alerts = alerts_widget->refresh();
@@ -187,6 +188,6 @@ void OffroadHome::refresh() {
   update_notif->setVisible(updateAvailable);
   alert_notif->setVisible(alerts);
   if (alerts) {
-    alert_notif->setText(QString::number(alerts) + (alerts > 1 ? " ALERTS" : " ALERT"));
+    alert_notif->setText(QString::number(alerts) + (alerts > 1 ? " Предупреждения" : " Предупреждение"));
   }
 }

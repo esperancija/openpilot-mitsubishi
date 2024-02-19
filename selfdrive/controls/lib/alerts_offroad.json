@@ -1,56 +1,56 @@
 {
   "Offroad_ChargeDisabled": {
-    "text": "EON charging disabled after car being off for more than 30 hours. Turn ignition on to start charging again.",
+    "text": "Зарядка EON отключается после того, как автомобиль был выключен более чем на 30 часов. Включите зажигание, чтобы снова начать зарядку.",
     "severity": 0
   },
   "Offroad_TemperatureTooHigh": {
-    "text": "Device temperature too high. System won't start.",
+    "text": "Слишком высокая температура устройства. Система не запускается.",
     "severity": 1
   },
   "Offroad_ConnectivityNeededPrompt": {
-    "text": "Immediately connect to the internet to check for updates. If you do not connect to the internet, openpilot won't engage in ",
+    "text": "Немедленно подключитесь к Интернету, чтобы проверить наличие обновлений. Openpilot не обновлялся ",
     "severity": 0,
     "_comment": "Append the number of days at the end of the text"
   },
   "Offroad_ConnectivityNeeded": {
-    "text": "Connect to internet to check for updates. openpilot won't automatically start until it connects to internet to check for updates.",
+    "text": "Подключитесь к Интернету, чтобы проверить наличие обновлений. openpilot не запустится автоматически, пока не подключится к Интернету для проверки обновлений.",
     "severity": 1
   },
   "Offroad_UpdateFailed": {
-    "text": "Unable to download updates\n",
+    "text": "Не удается загрузить обновления\n",
     "severity": 1,
     "_comment": "Append the command and error to the text."
   },
   "Offroad_InvalidTime": {
-    "text": "Invalid date and time settings, system won't start. Connect to internet to set time.",
+    "text": "Неверные настройки даты и времени, система не запускается. Подключитесь к Интернету, чтобы установить время.",
     "severity": 1
   },
   "Offroad_IsTakingSnapshot": {
-    "text": "Taking camera snapshots. System won't start until finished.",
+    "text": "Делаю снимки с камеры. Система не запустится, пока не завершит работу.",
     "severity": 0
   },
   "Offroad_NeosUpdate": {
-    "text": "An update to your device's operating system is downloading in the background. You will be prompted to update when it's ready to install.",
+    "text": "Обновление операционной системы вашего устройства загружается в фоновом режиме. Вам будет предложено выполнить обновление, когда оно будет готово к установке.",
     "severity": 0
   },
   "Offroad_UnofficialHardware": {
-    "text": "Device failed to register. It will not connect to or upload to comma.ai servers, and receives no support from comma.ai. If this is an official device, contact support@comma.ai.",
+    "text": "Эта ветка COMMA в полной мере не является разработкой comma.ai. Это отдельная ветка для Mitsubishi Outlander 3, здесь мы сами себе помощники.",
     "severity": 1
   },
   "Offroad_StorageMissing": {
-    "text": "NVMe drive not mounted.",
+    "text": "NVMe привод не установлен.",
     "severity": 1
   },
   "Offroad_BadNvme": {
-    "text": "Unsupported NVMe drive detected. Device may draw significantly more power and overheat due to the unsupported NVMe.",
+    "text": "Обнаружен неподдерживаемый привод NVMe. Устройство может потреблять значительно больше энергии и перегреваться из-за неподдерживаемого NVMe.",
     "severity": 1
   },
   "Offroad_CarUnrecognized": {
-    "text": "openpilot was unable to identify your car. Your car is either unsupported or its ECUs are not recognized. Please submit a pull request to add the firmware versions to the proper vehicle. Need help? Join discord.comma.ai.",
+    "text": "openpilot не удалось идентифицировать ваш автомобиль. Ваш автомобиль либо не поддерживается, либо его ЭБУ не распознаются. Пожалуйста, отправьте запрос на обновление, чтобы добавить версии встроенного ПО для соответствующего автомобиля. Нужна помощь? Присоединяйтесь discord.comma.ai.",
     "severity": 0
   },
   "Offroad_NoFirmware": {
-    "text": "openpilot was unable to identify your car. Check integrity of cables and ensure all connections are secure, particularly that the comma power is fully inserted in the OBD-II port of the vehicle. Need help? Join discord.comma.ai.",
+    "text": "openpilot не удалось идентифицировать ваш автомобиль. Проверьте целостность кабелей и убедитесь в надежности всех подключений, в частности, в том, что блок питания comma полностью подключен к порту OBD-II автомобиля. Нужна помощь? Присоединяйтесь discord.comma.ai.",
     "severity": 0
   }
 }

@@ -18,7 +18,7 @@ const int MITSUBISHI_MIN_ACCEL = -3500;       // -3.5 m/s2
 
 const int MITSUBISHI_STANDSTILL_THRSLD = 100;  // 1kph
 
-// Roughly calculated using the offsets in openpilot +5%:
+// Roughly calculated using the offsets in openpilot +5%: Controls Unresposive
 // In openpilot: ((gas1_norm + gas2_norm)/2) > 15
 // gas_norm1 = ((gain_dbc*gas1) + offset1_dbc)
 // gas_norm2 = ((gain_dbc*gas2) + offset2_dbc)
@@ -112,7 +112,7 @@ static int mitsubishi_fwd_hook(int bus_num, CANPacket_t *to_fwd) {
   UNUSED(to_fwd);
   UNUSED(bus_num);
 
-  return 0;
+  return -1;
 }
 
 const safety_hooks mitsubishi_hooks = {
