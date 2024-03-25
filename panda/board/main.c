@@ -191,6 +191,7 @@ void tick_handler(void) {
         heartbeat_counter += 1U;
       }
 
+
       if (siren_countdown > 0U) {
         siren_countdown -= 1U;
       }

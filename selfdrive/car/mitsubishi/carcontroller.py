@@ -4,6 +4,7 @@ from opendbc.can.packer import CANPacker
 #from common.dp_common import common_controller_ctrl
 from selfdrive.car.mitsubishi.values import CAR, CarControllerParams
 
+from common.numpy_fast import interp
 import cereal.messaging as messaging
 
 class CarController():
@@ -58,8 +59,11 @@ class CarController():
 
     #stiff = int(round(self.sm['liveParameters'].stiffnessFactor  * 100))
     #stiff = int(round(self.sm['liveParameters'].roll * 10))
-    sad = int(round(self.sm['carState'].newSteerActuatorDelay*500))
-    CS.CP.steerActuatorDelay = self.sm['carState'].newSteerActuatorDelay
+
+    #CS.CP.steerActuatorDelay = self.sm['carState'].newSteerActuatorDelay
+    CS.CP.steerActuatorDelay = self.sm['carState'].newSteerActuatorDelay*interp(abs(self.sm['carState'].steeringAngleDeg), [0., 10.], [3., 1.])
+    #sad = int(round(self.sm['carState'].newSteerActuatorDelay*500))
+    sad = int(round(CS.CP.steerActuatorDelay*500))
 
 
     new_steer = int(round(actuators.steer * CarControllerParams.STEER_MOMENT_MAX))
@@ -68,7 +72,7 @@ class CarController():
     apply_steer = apply_std_steer_torque_limits(new_steer, self.apply_steer_last,
                                                    CS.out.steeringTorqueEps, CarControllerParams)
 
-    print ("ll=%d, rl=%d lead=%d sr=%d sf=%d tst=%d" % (left_line, right_line, lead, steerRatio, sad, angleOffset)) # dmonitoringd
+    print ("ll=%d, rl=%d lead=%d ratio=%d delay=%d angle=%d" % (left_line, right_line, lead, steerRatio, sad, self.sm['carState'].steeringAngleDeg)) # dmonitoringd
 
     
     new_msg = self.create_lkas_command(int(apply_steer), int(actuators.steeringAngleDeg*2),
