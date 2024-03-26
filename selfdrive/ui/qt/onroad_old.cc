@@ -191,7 +191,7 @@ void OnroadHud::updateState(const UIState &s) {
   setProperty("is_cruise_set", cruise_set);
   setProperty("speed", QString::number(std::nearbyint(cur_speed)));
   setProperty("maxSpeed", maxspeed_str);
-  setProperty("speedUnit", s.scene.is_metric ? "км/ч" : "миль/ч");
+  setProperty("speedUnit", s.scene.is_metric ? "km/h" : "mph");
   setProperty("hideDM", cs.getAlertSize() != cereal::ControlsState::AlertSize::NONE);
   setProperty("status", s.status);
 
@@ -220,7 +220,7 @@ void OnroadHud::paintEvent(QPaintEvent *event) {
   p.setPen(Qt::NoPen);
 
   configFont(p, "Open Sans", 48, "Regular");
-  drawText(p, rc.center().x(), 118, "МАКС", is_cruise_set ? 200 : 100);
+  drawText(p, rc.center().x(), 118, "MAX", is_cruise_set ? 200 : 100);
   if (is_cruise_set) {
     configFont(p, "Open Sans", 88, "Bold");
     drawText(p, rc.center().x(), 212, maxSpeed, 255);

@@ -1,4 +1,4 @@
-﻿#include "selfdrive/ui/qt/widgets/drive_stats.h"
+#include "selfdrive/ui/qt/widgets/drive_stats.h"
 
 #include <QDebug>
 #include <QGridLayout>
@@ -34,16 +34,16 @@ DriveStats::DriveStats(QWidget* parent) : QFrame(parent) {
     grid_layout->addWidget(labels.distance = newLabel("0", "number"), row, 1, Qt::AlignLeft);
     grid_layout->addWidget(labels.hours = newLabel("0", "number"), row, 2, Qt::AlignLeft);
 
-    grid_layout->addWidget(newLabel("Заезды ", "unit"), row + 1, 0, Qt::AlignLeft);
+    grid_layout->addWidget(newLabel("Drives", "unit"), row + 1, 0, Qt::AlignLeft);
     grid_layout->addWidget(labels.distance_unit = newLabel(getDistanceUnit(), "unit"), row + 1, 1, Qt::AlignLeft);
-    grid_layout->addWidget(newLabel("Часы ", "unit"), row + 1, 2, Qt::AlignLeft);
+    grid_layout->addWidget(newLabel("Hours ", "unit"), row + 1, 2, Qt::AlignLeft);
 
     main_layout->addLayout(grid_layout);
   };
 
-  add_stats_layouts("Все время", all_);
+  add_stats_layouts("ALL TIME", all_);
   main_layout->addStretch();
-  add_stats_layouts("За неделю", week_);
+  add_stats_layouts("PAST WEEK", week_);
 
   if (auto dongleId = getDongleId()) {
     QString url = CommaApi::BASE_URL + "/v1.1/devices/" + *dongleId + "/stats";

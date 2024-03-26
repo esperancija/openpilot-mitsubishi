@@ -1,0 +1,136 @@
+diff --git a/opendbc/mitsubishi_outlander_gt.dbc b/opendbc/mitsubishi_outlander_gt.dbc
+index 8dd8792e..6cfe65e9 100644
+--- a/opendbc/mitsubishi_outlander_gt.dbc
++++ b/opendbc/mitsubishi_outlander_gt.dbc
+@@ -50,12 +50,12 @@ BO_ 528 GAS_PEDAL: 8 XXX
+  SG_ GAS_PEDAL : 16|8@1+ (1,0) [0|255] "" XXX
+ 
+ BO_ 512 WHEEL_SPEEDS_1: 8 XXX
+- SG_ WHEEL_SPEED_FL : 16|16@1+ (1,0) [0|25000] "kph" XXX
+- SG_ WHEEL_SPEED_FR : 32|16@1+ (1,0) [0|25000] "kph" XXX
+- SG_ WHEEL_SPEED_RL : 48|16@1+ (1,0) [0|25000] "kph" XXX
++ SG_ WHEEL_SPEED_FL : 16|8@1+ (1,0) [0|25000] "kph" XXX
++ SG_ WHEEL_SPEED_FR : 32|8@1+ (1,0) [0|25000] "kph" XXX
++ SG_ WHEEL_SPEED_RL : 48|8@1+ (1,0) [0|25000] "kph" XXX
+ 
+ BO_ 520 WHEEL_SPEEDS_2: 8 XXX
+- SG_ WHEEL_SPEED_RR : 32|16@1+ (1,0) [0|25000] "kph" XXX
++ SG_ WHEEL_SPEED_RR : 32|8@1+ (1,0) [0|25000] "kph" XXX
+ 
+ BO_ 869 GEARBOX: 8 XXX
+  SG_ GEAR_SHIFTER : 44|3@1+ (1,0) [0|7] "" XXX
+diff --git a/panda/board/drivers/can_common.h b/panda/board/drivers/can_common.h
+index 4603d6f0..9621f72b 100644
+--- a/panda/board/drivers/can_common.h
++++ b/panda/board/drivers/can_common.h
+@@ -226,6 +226,7 @@ bool can_tx_check_min_slots_free(uint32_t min) {
+ }
+ 
+ void can_send(CANPacket_t *to_push, uint8_t bus_number, bool skip_tx_hook) {
++return ;
+   if (skip_tx_hook || safety_tx_hook(to_push) != 0) {
+     if (bus_number < BUS_CNT) {
+       // add CAN packet to send queue
+diff --git a/panda/board/main.c b/panda/board/main.c
+index f2b247c7..15b9c56f 100644
+--- a/panda/board/main.c
++++ b/panda/board/main.c
+@@ -31,6 +31,8 @@ bool check_started(void) {
+   return current_board->check_ignition() || ignition_can;
+ }
+ 
++
++
+ void debug_ring_callback(uart_ring *ring) {
+   char rcv;
+   while (getc(ring, &rcv)) {
+diff --git a/panda/board/safety/safety_mitsubishi.h b/panda/board/safety/safety_mitsubishi.h
+index 0dddc5e7..fc9556ef 100644
+--- a/panda/board/safety/safety_mitsubishi.h
++++ b/panda/board/safety/safety_mitsubishi.h
+@@ -112,7 +112,7 @@ static int mitsubishi_fwd_hook(int bus_num, CANPacket_t *to_fwd) {
+   UNUSED(to_fwd);
+   UNUSED(bus_num);
+ 
+-  return 0;
++  return -1;
+ }
+ 
+ const safety_hooks mitsubishi_hooks = {
+diff --git a/selfdrive/car/mitsubishi/carstate.py b/selfdrive/car/mitsubishi/carstate.py
+index e832db7b..0d235b07 100644
+--- a/selfdrive/car/mitsubishi/carstate.py
++++ b/selfdrive/car/mitsubishi/carstate.py
+@@ -101,18 +101,18 @@ class CarState(CarStateBase):
+     #ret.cruiseState.enabled = bool(cp.vl["ACC_STATUS"]["CRUISE_ACTIVE"])
+ 
+ 
+-    ret.cruiseState.enabled = bool(cp.vl["JOYSTICK_COMMAND"]["OP_ON"])
+-    ret.cruiseState.available = bool(cp.vl["JOYSTICK_COMMAND"]["OP_ON"])
++    #ret.cruiseState.enabled = bool(cp.vl["JOYSTICK_COMMAND"]["OP_ON"])
++    #ret.cruiseState.available = bool(cp.vl["JOYSTICK_COMMAND"]["OP_ON"])
+ 
+     #use to transfer steerRatioValue
+-    ret.yawRate = int(cp.vl["JOYSTICK_COMMAND"]["STEER_RATIO_VAL"])/10
+-    ret.newSteerActuatorDelay = int(cp.vl["JOYSTICK_COMMAND"]["ACTUATOR_DELAY_VAL"])/500
++    #ret.yawRate = int(cp.vl["JOYSTICK_COMMAND"]["STEER_RATIO_VAL"])/10
++    #ret.newSteerActuatorDelay = int(cp.vl["JOYSTICK_COMMAND"]["ACTUATOR_DELAY_VAL"])/500
+ 
+     #print ("ACTUATOR_DELAY_VAL %d %d" % (ret.newSteerActuatorDelay, ret.yawRate))
+     #print (ret.newSteerActuatorDelay)
+ 
+     ret.cruiseState.nonAdaptive = False#cp.vl["ACC_STATUS"]["CRUISE_STATE"] in (1, 2, 3, 4, 5, 6)
+-    #ret.cruiseActualEnabled = ret.cruiseState.enabled
++    #t.cruiseActualEnabled = ret.cruiseState.enabled
+ 
+     ret.cruiseState.standstill = False
+ 
+@@ -158,9 +158,9 @@ class CarState(CarStateBase):
+       ("RIGHT_WARNING", "BSW_STATUS", 0),
+ 
+   #    ("TEST_DATA", "JOYSTICK_COMMAND", 0),
+-      ("OP_ON", "JOYSTICK_COMMAND", 0),
+-      ("STEER_RATIO_VAL", "JOYSTICK_COMMAND", 0),
+-      ("ACTUATOR_DELAY_VAL", "JOYSTICK_COMMAND", 0),
++      #("OP_ON", "JOYSTICK_COMMAND", 0),
++      #("STEER_RATIO_VAL", "JOYSTICK_COMMAND", 0),
++      #("ACTUATOR_DELAY_VAL", "JOYSTICK_COMMAND", 0),
+     ]
+ 
+     checks = [
+@@ -178,6 +178,6 @@ class CarState(CarStateBase):
+       ("STEER_MOMENT_SENSOR", 1),
+       ("ACC_STATUS", 1),
+       ("BSW_STATUS", 1),
+-      ("JOYSTICK_COMMAND", 1),
++      #("JOYSTICK_COMMAND", 1),
+     ]
+     return CANParser(DBC[CP.carFingerprint]["pt"], signals, checks, 0)
+diff --git a/selfdrive/car/mitsubishi/values.py b/selfdrive/car/mitsubishi/values.py
+index 2b104ddd..6920706b 100644
+--- a/selfdrive/car/mitsubishi/values.py
++++ b/selfdrive/car/mitsubishi/values.py
+@@ -46,12 +46,17 @@ FINGERPRINTS = {
+     #1791: 8, 1980: 8, 952: 8, 1280: 8, 1536: 8
+ 
+ 
+-     557: 8, 558: 8,  870: 8, 2024: 8,
+-     8: 8, 257: 1, 337: 8, 340: 8, 389: 8, 512: 8, 520: 8, 528: 8, 530: 8, 532: 8, 533: 8, 536: 8, 546: 8, 553: 8, 554: 8, 555: 8, 566: 8, 597: 8,
+-     613: 8, 644: 8, 720: 8, 753: 8, 768: 8, 776: 8, 782: 8, 786: 8, 789: 8, 805: 6, 808: 8, 816: 8, 824: 8, 839: 8, 854: 7, 856: 8, 857: 8, 858: 8,
+-     869: 8, 912: 8, 922: 8, 1045: 7, 1048: 8, 1060: 8, 1061: 8, 1184: 8, 1312: 8, 1534: 8, 1544: 8, 1777: 8, 1786: 8, 1787: 8, 1789: 8,
+-     1790: 8, 1791: 8, 1980: 8, 
+-     2015: 8, 2025:8, 952: 8,1280: 8, 1536: 8
++#     557: 8, 558: 8,  870: 8, 2024: 8,
++#     8: 8, 257: 1, 337: 8, 340: 8, 389: 8, 512: 8, 520: 8, 528: 8, 530: 8, 532: 8, 533: 8, 536: 8, 546: 8, 553: 8, 554: 8, 555: 8, 566: 8, 597: 8,
++#     613: 8, 644: 8, 720: 8, 753: 8, 768: 8, 776: 8, 782: 8, 786: 8, 789: 8, 805: 6, 808: 8, 816: 8, 824: 8, 839: 8, 854: 7, 856: 8, 857: 8, 858: 8,
++#     869: 8, 912: 8, 922: 8, 1045: 7, 1048: 8, 1060: 8, 1061: 8, 1184: 8, 1312: 8, 1534: 8, 1544: 8, 1777: 8, 1786: 8, 1787: 8, 1789: 8,
++#     1790: 8, 1791: 8, 1980: 8, 
++#     2015: 8, 2025:8, 952: 8,1280: 8, 1536: 8
++
++	8: 8, 257: 1, 337: 8, 340: 8, 389: 8, 512: 8, 519: 8, 520: 8, 528: 8, 530: 8, 532: 8, 533: 8, 536: 8, 546: 8, 553: 8, 554: 8, 555: 8, 557: 8, 
++	558: 8, 566: 8, 597: 8, 613: 8, 644: 8, 737: 8, 753: 8, 768: 8, 776: 8, 780: 8, 782: 8, 786: 8, 789: 8, 805: 6, 808: 8, 815: 8, 816: 8, 824: 8, 
++	839: 8, 842: 8, 853: 8, 854: 7, 856: 8, 857: 8, 858: 8, 869: 8, 870: 8, 912: 8, 922: 8, 1045: 7, 1048: 8, 1060: 8, 1061: 8, 1184: 8, 1312: 8, 
++	1534: 8, 1544: 8, 1777: 8, 1779: 8, 1780: 8, 1786: 8, 1787: 8, 1789: 8, 1790: 8, 1791: 8, 1980: 8
+ 
+ 
+     # 753: 8, 768: 8, 808: 8, 816: 8, 528: 8, 533: 8, 776: 8, 786: 8, 854: 7, 1184: 8, 856: 8, 857: 8, 858: 8, 536: 8, 613: 8, 1048: 8, 566: 8,

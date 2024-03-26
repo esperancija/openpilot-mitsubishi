@@ -153,7 +153,7 @@ OffroadHome::OffroadHome(QWidget* parent) : QFrame(parent) {
       font-weight: 500;
     }
     OffroadHome > QLabel {
-      font-size: 46px;
+      font-size: 55px;
     }
   )");
 }
@@ -168,8 +168,7 @@ void OffroadHome::hideEvent(QHideEvent *event) {
 }
 
 void OffroadHome::refresh() {
- 
-  date->setText(QDateTime::currentDateTime().toString("dd / MM / yyyy г."));
+  date->setText(QDateTime::currentDateTime().toString("dddd, MMMM d"));
 
   bool updateAvailable = update_widget->refresh();
   int alerts = alerts_widget->refresh();
