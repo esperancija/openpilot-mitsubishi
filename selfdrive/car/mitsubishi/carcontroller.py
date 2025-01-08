@@ -60,8 +60,8 @@ class CarController():
     #stiff = int(round(self.sm['liveParameters'].stiffnessFactor  * 100))
     #stiff = int(round(self.sm['liveParameters'].roll * 10))
 
-    #CS.CP.steerActuatorDelay = self.sm['carState'].newSteerActuatorDelay
-    CS.CP.steerActuatorDelay = self.sm['carState'].newSteerActuatorDelay*interp(abs(self.sm['carState'].steeringAngleDeg), [0., 10.], [3., 1.])
+    CS.CP.steerActuatorDelay = self.sm['carState'].newSteerActuatorDelay
+    #CS.CP.steerActuatorDelay = self.sm['carState'].newSteerActuatorDelay*interp(abs(self.sm['carState'].steeringAngleDeg), [0., 10.], [3., 1.])
     #sad = int(round(self.sm['carState'].newSteerActuatorDelay*500))
     sad = int(round(CS.CP.steerActuatorDelay*500))
 

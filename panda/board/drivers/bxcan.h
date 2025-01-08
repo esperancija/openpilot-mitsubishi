@@ -164,6 +164,10 @@ void process_can(uint8_t can_number) {
 // CAN receive handlers
 // blink blue when we are receiving CAN messages
 void can_rx(uint8_t can_number) {
+
+
+  //puts("CAN RX"); puth2(can_number);
+
   CAN_TypeDef *CAN = CANIF_FROM_CAN_NUM(can_number);
   uint8_t bus_number = BUS_NUM_FROM_CAN_NUM(can_number);
   while ((CAN->RF0R & CAN_RF0R_FMP0) != 0) {
@@ -217,6 +221,7 @@ void CAN1_SCE_IRQ_Handler(void) { can_sce(CAN1); }
 void CAN2_TX_IRQ_Handler(void) { process_can(1); }
 void CAN2_RX0_IRQ_Handler(void) { can_rx(1); }
 void CAN2_SCE_IRQ_Handler(void) { can_sce(CAN2); }
+
 
 void CAN3_TX_IRQ_Handler(void) { process_can(2); }
 void CAN3_RX0_IRQ_Handler(void) { can_rx(2); }

@@ -19,6 +19,7 @@ struct harness_configuration {
 
 // this function will be the API for tici
 void set_intercept_relay(bool intercept) {
+
   if (car_harness_status != HARNESS_STATUS_NC) {
     if (intercept) {
       puts("switching harness to intercept (relay on)\n");
@@ -53,8 +54,8 @@ uint8_t harness_detect_orientation(void) {
   uint8_t ret = HARNESS_STATUS_NC;
 
   #ifndef BOOTSTUB
-  uint32_t sbu1_voltage = adc_get(current_board->harness_config->adc_channel_SBU1);
-  uint32_t sbu2_voltage = adc_get(current_board->harness_config->adc_channel_SBU2);
+  uint32_t sbu1_voltage = 10;//adc_get(current_board->harness_config->adc_channel_SBU1);
+  uint32_t sbu2_voltage = 20;//adc_get(current_board->harness_config->adc_channel_SBU2);
 
   // Detect connection and orientation
   if((sbu1_voltage < HARNESS_CONNECTED_THRESHOLD) || (sbu2_voltage < HARNESS_CONNECTED_THRESHOLD)){

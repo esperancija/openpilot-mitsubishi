@@ -86,7 +86,6 @@ bool getc(uart_ring *q, char *elem) {
     ret = true;
   }
   EXIT_CRITICAL();
-
   return ret;
 }
 
@@ -153,7 +152,6 @@ void putch(const char a) {
   if (has_external_debug_serial) {
     // assuming debugging is important if there's external serial connected
     while (!putc(&uart_ring_debug, a));
-
   } else {
     // misra-c2012-17.7: serial debug function, ok to ignore output
     (void)injectc(&uart_ring_debug, a);

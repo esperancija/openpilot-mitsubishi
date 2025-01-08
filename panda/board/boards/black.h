@@ -181,6 +181,7 @@ void black_init(void) {
 
   // Set normal CAN mode
   black_set_can_mode(CAN_MODE_NORMAL);
+  //black_set_can_mode(CAN_MODE_OBD_CAN2);
 
   // flip CAN0 and CAN2 if we are flipped
   if (car_harness_status == HARNESS_STATUS_FLIPPED) {

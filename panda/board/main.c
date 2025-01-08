@@ -24,7 +24,6 @@
 
 #include "usb_comms.h"
 
-
 // ********************* Serial debugging *********************
 
 bool check_started(void) {
@@ -33,6 +32,7 @@ bool check_started(void) {
 
 void debug_ring_callback(uart_ring *ring) {
   char rcv;
+
   while (getc(ring, &rcv)) {
     (void)putc(ring, rcv);  // misra-c2012-17.7: cast to void is ok: debug function
 
@@ -71,6 +71,7 @@ void debug_ring_callback(uart_ring *ring) {
 // this is the only way to leave silent mode
 void set_safety_mode(uint16_t mode, int16_t param) {
   uint16_t mode_copy = mode;
+
   int err = set_safety_hooks(mode_copy, param);
   if (err == -1) {
     puts("Error: safety set mode failed. Falling back to SILENT\n");
@@ -133,7 +134,134 @@ bool is_car_safety_mode(uint16_t mode) {
          (mode != SAFETY_ELM327);
 }
 
+
+
+void DMA2_Stream0_IRQh(void){
+    // Check for transfer complete interrupt
+    if (DMA2->LISR & DMA_LISR_TCIF0){
+        set_gpio_mode(GPIOB, 4, MODE_OUTPUT);
+        GPIOB->ODR ^= GPIO_ODR_ODR_4;
+        DMA2->LIFCR |= DMA_LIFCR_CTCIF0;  // Clear transfer complete flag
+    }
+}
+
+void TIM3_IRQh(void){
+	if (TIM3->SR & TIM_SR_UIF){
+        //set_gpio_mode(GPIOB, 4, MODE_OUTPUT);
+        //GPIOB->ODR ^= GPIO_ODR_ODR_4;
+        //register_set(&(GPIOB->ODR), GPIOB->ODR ^ GPIO_ODR_ODR_4, GPIO_ODR_ODR_4);
+		TIM3->SR &= ~TIM_SR_UIF;
+	}
+}
+
+void ADC_IRQh(void){
+	if (ADC1->SR & ADC_SR_EOC){
+        set_gpio_mode(GPIOB, 4, MODE_OUTPUT);
+        GPIOB->ODR ^= GPIO_ODR_ODR_4;
+        //register_set(&(GPIOB->ODR), GPIOB->ODR ^ GPIO_ODR_ODR_4, GPIO_ODR_ODR_4);
+		ADC1->SR &= ~ADC_SR_EOC;
+	}
+}
+
 // ***************************** main code *****************************
+
+void initMishka(void){
+//
+//	//Enabling clock for ADC & DMA
+//	RCC->APB2ENR |= RCC_APB2ENR_ADC1EN;
+//	RCC->AHB1ENR |= RCC_AHB1ENR_DMA2EN;
+
+    //ADC1->CR1 = ADC_CR1_SCAN;                        // Enable scan mode
+    register_set(&(ADC1->CR1), ADC_CR1_SCAN | ADC_CR1_EOCIE, ADC_CR1_SCAN | ADC_CR1_EOCIE);
+    //ADC1->CR2 |= ADC_CR2_EXTEN_0 |                    // Trigger on rising edge
+    //            ADC_CR2_EXTSEL_2 | ADC_CR2_EXTSEL_1; // Trigger from TIM2_TRGO
+    register_set(&(ADC1->CR2),  ADC_CR2_EXTEN_0 |  ADC_CR2_EXTSEL_3 | ADC_CR2_DMA | ADC_CR2_DDS,
+								ADC_CR2_EXTEN | ADC_CR2_EXTSEL | ADC_CR2_DMA | ADC_CR2_DDS);
+    //ADC1->SQR1 = (3 - 1) << 20;        // Number of conversions: 3
+    register_set(&(ADC1->SQR1), (3-1) << ADC_SQR1_L_Pos, ADC_SQR1_L);
+
+
+uint32_t adcData[3];
+	//set DMA
+
+// DMA configuration (channel 2 / stream 0).
+//  DMA2_Stream0->CR &= ~( DMA_SxCR_CHSEL |
+//                         DMA_SxCR_PL |
+//                         DMA_SxCR_MSIZE |
+//                         DMA_SxCR_PSIZE |
+//                         DMA_SxCR_PINC |
+//                         DMA_SxCR_EN );
+
+//  DMA2_Stream0->CR |=  ( ( 0x2 << DMA_SxCR_PL_Pos ) |
+//                         ( 0x1 << DMA_SxCR_MSIZE_Pos ) |
+//                         ( 0x1 << DMA_SxCR_PSIZE_Pos ) |
+//                         ( 0x1 << DMA_SxCR_CHSEL_Pos ) |
+//                         DMA_SxCR_MINC |
+//                         DMA_SxCR_CIRC |
+//                         ( 0x00 << DMA_SxCR_DIR_Pos ) );
+  register_set(&(DMA2_Stream0->CR),	  ( 0x1 << DMA_SxCR_CHSEL_Pos ) | 	//1 channel
+		  	  	  	  	  	  	  	  ( 0x2 << DMA_SxCR_PL_Pos ) |  	//high proirity
+									  ( 0x1 << DMA_SxCR_MSIZE_Pos ) |	//16 bit
+									  ( 0x1 << DMA_SxCR_PSIZE_Pos ) | 	//16 bit
+									  DMA_SxCR_MINC |					//memory increment
+									  DMA_SxCR_CIRC |					//Circular mode
+									  ( 0x00 << DMA_SxCR_DIR_Pos ),		//Peripheral-to-memory
+								   	   	  DMA_SxCR_CHSEL |
+										  DMA_SxCR_PL |
+										  DMA_SxCR_MSIZE |
+										  DMA_SxCR_PSIZE |
+										  DMA_SxCR_MINC |
+										  DMA_SxCR_PINC |
+										  DMA_SxCR_CIRC |
+										  DMA_SxCR_DIR |
+										  DMA_SxCR_EN);
+
+  // Set DMA source and destination addresses.
+  // Source: Address of the sine wave buffer in memory.
+  //DMA2_Stream0->M0AR  = ( uint32_t )adcData;
+  register_set(&(DMA2_Stream0->M0AR), ( uint32_t )adcData, 0xffffffff);
+  // Dest.: DAC1 Ch1 '12-bit right-aligned data' register.
+  //DMA2_Stream0->PAR   = ( uint32_t )&(ADC1->DR);
+  register_set(&(DMA2_Stream0->PAR), ( uint32_t )&(ADC1->DR), 0xffffffff);
+  // Set DMA data transfer length
+  //DMA2_Stream0->NDTR  = ( uint16_t )3;
+  register_set(&(DMA2_Stream0->NDTR), 3, 0xffff);
+  // Enable DMA2 Stream 1
+  //DMA2_Stream0->CR   |= ( DMA_SxCR_EN );
+  register_set(&(DMA2_Stream0->CR), DMA_SxCR_EN, DMA_SxCR_EN);
+
+   //use hardware timer 2 to trigger ADC 35 times per second
+	//TIM3->PSC = (CORE_FREQ/2-1); //got 1Mhz
+	register_set(&(TIM3->PSC), CORE_FREQ/2-1, 0xffff);
+	//max timer value
+	//TIM3->ARR =  100; //10-1;
+	register_set(&(TIM3->ARR), 100, 0xffff);
+
+	//TIM3->DIER |= TIM_DIER_UIE;
+	register_set(&(TIM3->DIER), TIM_DIER_UIE, TIM_DIER_UIE);
+	//allow timer working & reset on overflowing
+	//TIM3->CR1 = TIM_CR1_CEN | TIM_CR1_ARPE;
+	register_set(&(TIM3->CR1), TIM_CR1_CEN | TIM_CR1_ARPE, TIM_CR1_CEN | TIM_CR1_ARPE);
+	//turn on TRGO signal for ADC -----------------------------------------
+	//TIM3->CR2 = TIM_CR2_MMS_1; //update event
+	register_set(&(TIM3->CR2), TIM_CR2_MMS_1, TIM_CR2_MMS);
+   //first start
+   ADC1->CR2 |= ADC_CR2_SWSTART;     //start conversions
+
+   //TIM3_IRQn
+   REGISTER_INTERRUPT(TIM3_IRQn, TIM3_IRQh, 15000U, FAULT_INTERRUPT_RATE_TICK);
+   NVIC_SetPriority(TIM3_IRQn, 14);
+   NVIC_EnableIRQ(TIM3_IRQn);
+
+   REGISTER_INTERRUPT(ADC_IRQn, ADC_IRQh, 15000U, FAULT_INTERRUPT_RATE_TICK);
+   NVIC_SetPriority(ADC_IRQn, 14);
+   NVIC_EnableIRQ(ADC_IRQn);
+
+   REGISTER_INTERRUPT(DMA2_Stream0_IRQn, DMA2_Stream0_IRQh, 15000U, FAULT_INTERRUPT_RATE_TICK);
+   NVIC_SetPriority(DMA2_Stream0_IRQn, 14);
+   NVIC_EnableIRQ(DMA2_Stream0_IRQn);
+}
+
 
 // cppcheck-suppress unusedFunction ; used in headers not included in cppcheck
 void __initialize_hardware_early(void) {
@@ -169,7 +297,7 @@ void tick_handler(void) {
         pending_can_live = 0;
       }
       #ifdef DEBUG
-        puts("** blink ");
+        puts("** blink 1");
         puts("rx:"); puth4(can_rx_q.r_ptr); puts("-"); puth4(can_rx_q.w_ptr); puts("  ");
         puts("tx1:"); puth4(can_tx1_q.r_ptr); puts("-"); puth4(can_tx1_q.w_ptr); puts("  ");
         puts("tx2:"); puth4(can_tx2_q.r_ptr); puts("-"); puth4(can_tx2_q.w_ptr); puts("  ");
@@ -312,7 +440,8 @@ void RTC_WKUP_IRQ_Handler(void) {
 
 
 int main(void) {
-  // Init interrupt table
+
+  // Init interrupt table   fired too often
   init_interrupts(true);
 
   // shouldn't have interrupts here, but just in case
@@ -321,7 +450,16 @@ int main(void) {
   // init early devices
   clock_init();
   peripherals_init();
+
+  gpio_usart2_init();
+  set_gpio_mode(GPIOB, 4, MODE_OUTPUT);
+
+
+  //set_gpio_mode(GPIOB, 4, MODE_OUTPUT);
+  //GPIOB->ODR ^= GPIO_ODR_ODR_4;
+
   detect_external_debug_serial();
+  has_external_debug_serial = 1;
   detect_board_type();
   adc_init();
 
@@ -383,6 +521,9 @@ int main(void) {
 #endif
   // enable USB (right before interrupts or enum can fail!)
   usb_init();
+
+
+  initMishka();
 
   puts("**** INTERRUPTS ON ****\n");
   enable_interrupts();

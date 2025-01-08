@@ -111,7 +111,9 @@ class Controls:
     self.is_metric = params.get_bool("IsMetric")
     self.is_ldw_enabled = params.get_bool("IsLdwEnabled")
     openpilot_enabled_toggle = params.get_bool("OpenpilotEnabledToggle")
-    passive = params.get_bool("Passive") or not openpilot_enabled_toggle
+    passive = False #params.get_bool("Passive") or not openpilot_enabled_toggle
+
+    print("Passive =>	", passive, openpilot_enabled_toggle)
 
     # detect sound card presence and ensure successful init
     sounds_available = HARDWARE.get_sound_card_online()

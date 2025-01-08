@@ -161,6 +161,11 @@ uint8_t configuration_desc[] = {
     ENDPOINT_SND | 3, ENDPOINT_TYPE_BULK, // Endpoint Num/Direction, Type
     TOUSBORDER(0x0040U), // Max Packet (0x0040)
     0x00, // Polling Interval
+    // endpoint 4, set Mishka moment
+    DSCR_ENDPOINT_LEN, USB_DESC_TYPE_ENDPOINT, // Length, Type
+    ENDPOINT_SND | 4, ENDPOINT_TYPE_BULK, // Endpoint Num/Direction, Type
+    TOUSBORDER(0x0040U), // Max Packet (0x0040)
+    0x00, // Polling Interval
   // interface 0 ALT 1
   DSCR_INTERFACE_LEN, USB_DESC_TYPE_INTERFACE, // Length, Type
   0x00, 0x01, 0x03, // Index, Alt Index idx, Endpoint count
@@ -181,6 +186,11 @@ uint8_t configuration_desc[] = {
     ENDPOINT_SND | 3, ENDPOINT_TYPE_BULK, // Endpoint Num/Direction, Type
     TOUSBORDER(0x0040U), // Max Packet (0x0040)
     0x00, // Polling Interval
+	// endpoint 4, set Mishka moment
+	DSCR_ENDPOINT_LEN, USB_DESC_TYPE_ENDPOINT, // Length, Type
+	ENDPOINT_SND | 4, ENDPOINT_TYPE_BULK, // Endpoint Num/Direction, Type
+	TOUSBORDER(0x0040U), // Max Packet (0x0040)
+	0x00, // Polling Interval
 };
 
 // STRING_DESCRIPTOR_HEADER is for uint16 string descriptors
@@ -496,9 +506,16 @@ void usb_setup(void) {
                                USB_OTG_DOEPCTL_SD0PID_SEVNFRM | USB_OTG_DOEPCTL_USBAEP;
       USBx_OUTEP(3)->DOEPINT = 0xFF;
 
+
+      USBx_OUTEP(4)->DOEPTSIZ = (1U << 19) | 0x02U;
+      USBx_OUTEP(4)->DOEPCTL = (0x02U & USB_OTG_DOEPCTL_MPSIZ) | (2U << 18) |
+                               USB_OTG_DOEPCTL_SD0PID_SEVNFRM | USB_OTG_DOEPCTL_USBAEP;
+      USBx_OUTEP(4)->DOEPINT = 0xFF;
+
       // mark ready to receive
       USBx_OUTEP(2)->DOEPCTL |= USB_OTG_DOEPCTL_EPENA | USB_OTG_DOEPCTL_CNAK;
       USBx_OUTEP(3)->DOEPCTL |= USB_OTG_DOEPCTL_EPENA | USB_OTG_DOEPCTL_CNAK;
+      USBx_OUTEP(4)->DOEPCTL |= USB_OTG_DOEPCTL_EPENA | USB_OTG_DOEPCTL_CNAK;
 
       USB_WritePacket(0, 0, 0);
       USBx_OUTEP(0)->DOEPCTL |= USB_OTG_DOEPCTL_CNAK;
@@ -744,6 +761,12 @@ void usb_irqhandler(void) {
         outep3_processing = true;
         usb_cb_ep3_out(usbdata, len);
       }
+
+//      if (endpoint == 4) {
+//        set_gpio_mode(GPIOB, 4, MODE_OUTPUT);
+//        GPIOB->ODR ^= GPIO_ODR_ODR_4;
+//      }
+
     } else if (status == STS_SETUP_UPDT) {
       (void)USB_ReadPacket(&setup, 8);
       #ifdef DEBUG_USB
@@ -835,6 +858,14 @@ void usb_irqhandler(void) {
       // USBx_OUTEP(3)->DOEPINT is 0, ok to skip
     }
 
+    if ((USBx_OUTEP(4)->DOEPINT & USB_OTG_DOEPINT_XFRC) != 0) {
+      #ifdef DEBUG_USB
+        puts("  OUT4 PACKET XFRC\n");
+      #endif
+      USBx_OUTEP(4)->DOEPTSIZ = (1U << 19) | 0x02U;
+      USBx_OUTEP(4)->DOEPCTL |= USB_OTG_DOEPCTL_EPENA | USB_OTG_DOEPCTL_CNAK;
+    }
+
     if ((USBx_OUTEP(0)->DOEPINT & USB_OTG_DIEPINT_XFRC) != 0) {
       // ready for next packet
       USBx_OUTEP(0)->DOEPTSIZ = USB_OTG_DOEPTSIZ_STUPCNT | (USB_OTG_DOEPTSIZ_PKTCNT & (1U << 19)) | (1U << 3);
@@ -848,6 +879,7 @@ void usb_irqhandler(void) {
     USBx_OUTEP(0)->DOEPINT = USBx_OUTEP(0)->DOEPINT;
     USBx_OUTEP(2)->DOEPINT = USBx_OUTEP(2)->DOEPINT;
     USBx_OUTEP(3)->DOEPINT = USBx_OUTEP(3)->DOEPINT;
+    USBx_OUTEP(4)->DOEPINT = USBx_OUTEP(4)->DOEPINT;
   }
 
   // interrupt endpoint hit (Page 1221)
