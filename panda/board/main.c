@@ -36,6 +36,7 @@ void debug_ring_callback(uart_ring *ring) {
   while (getc(ring, &rcv)) {
     (void)putc(ring, rcv);  // misra-c2012-17.7: cast to void is ok: debug function
 
+
     // only allow bootloader entry on debug builds
     #ifdef ALLOW_DEBUG
       // jump to DFU flash
@@ -256,7 +257,7 @@ void initMishka(void){
 	register_set(&(TIM3->PSC), CORE_FREQ/2-1, 0xffff);
 	//max timer value
 	//TIM3->ARR =  100; //10-1;
-	register_set(&(TIM3->ARR), 100, 0xffff);
+	register_set(&(TIM3->ARR), 500, 0xffff);
 
 	//TIM3->DIER |= TIM_DIER_UIE;
 	register_set(&(TIM3->DIER), TIM_DIER_UIE, TIM_DIER_UIE);
@@ -494,7 +495,7 @@ int main(void) {
   }
 
   puts("Config:\n");
-  puts("  Board type: "); puts(current_board->board_type); puts("\n");
+  puts("  Board type:  "); puts(current_board->board_type); puts("\n");
   puts(has_external_debug_serial ? "  Real serial\n" : "  USB serial\n");
 
   // init board

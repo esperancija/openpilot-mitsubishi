@@ -417,13 +417,13 @@ uint8_t testData[2] = {0x55, 0xaa};
 
 void Panda::can_send(capnp::List<cereal::CanData>::Reader can_data_list) {
 
-//static uint32_t i;
+static uint32_t i;
 
   pack_can_buffer(can_data_list, [=](uint8_t* data, size_t size) {
    usb_bulk_write(3, data, size, 5);
 
-//    if (((++i) % 10) == 0)
-//    	usb_bulk_write(4, testData, 2, 500);
+    if (((++i) % 10) == 9)
+    	usb_bulk_write(4, testData, 2, 100);
 
   });
 }
