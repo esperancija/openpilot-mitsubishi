@@ -644,7 +644,7 @@ void mishka_thread(Panda *panda) {
       auto md = event.getSendmishka();
 
       //cereal::Event::sendmishka mdata = event;
-      LOGE("Got message to mishka %d %d", md, md)
+      LOGE("Got message to mishka %d %d", md, md.getSteeringAngleDeg())
       // for (const auto& panda : pandas) {
       //   LOGT("sending sendcan to panda: %s", (panda->usb_serial).c_str());
       //   panda->can_send(event.getSendcan());
