@@ -72,6 +72,7 @@ TIMINGS = {
   "pandaStates": [2.5, 0.35],
   "peripheralState": [2.5, 0.35],
   "sendcan": [2.5, 0.35],
+  "sendmishka": [2.5, 0.35],
   "carState": [2.5, 0.35],
   "carControl": [2.5, 0.35],
   "controlsState": [2.5, 0.35],

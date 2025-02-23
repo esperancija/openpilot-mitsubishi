@@ -286,6 +286,11 @@ struct CanData {
   src     @3 :UInt8;
 }
 
+struct MishkaData {
+  steeringAngleDeg @0 :UInt32;
+  src     @1 :UInt8;
+}
+
 struct DeviceState @0xa4d8b5af2aa492eb {
   usbOnline @12 :Bool;
   networkType @22 :NetworkType;
@@ -1756,6 +1761,7 @@ struct Event {
     radarState @13 :RadarState;
     liveTracks @16 :List(LiveTracks);
     sendcan @17 :List(CanData);
+    sendmishka @86 :MishkaData;
     liveCalibration @19 :LiveCalibrationData;
     carState @22 :Car.CarState;
     carControl @23 :Car.CarControl;

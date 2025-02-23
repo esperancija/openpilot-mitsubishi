@@ -609,6 +609,51 @@ void pigeon_thread(Panda *panda) {
   }
 }
 
+void mishka_thread(Panda *panda) {
+  util::set_thread_name("boardd_mishka");
+
+  AlignedBuffer aligned_buf;
+  std::unique_ptr<Context> context(Context::create());
+  std::unique_ptr<SubSocket> subscriber(SubSocket::create(context.get(), "sendmishka"));
+  //std::unique_ptr<SubSocket> subscriber(SubSocket::create(context.get(), "sendcan"));
+  
+  assert(subscriber != NULL);
+  subscriber->setTimeout(100);
+
+  // run as fast as messages come in
+  while (!do_exit && panda->connected) {
+    std::unique_ptr<Message> msg(subscriber->receive());
+    if (!msg) {
+      if (errno == EINTR) {
+        do_exit = true;
+      }
+      continue;
+    }
+
+    capnp::FlatArrayMessageReader cmsg(aligned_buf.align(msg.get()));
+    cereal::Event::Reader event = cmsg.getRoot<cereal::Event>();
+    //Dont send if older than 1 second
+    if ((nanos_since_boot() - event.getLogMonoTime() < 1e9)) {
+      //LOGE("Got message to mishka %d", event.sendmishka().steeringAngleDeg);
+
+      // auto ubloxRaw = event.getUbloxRaw();
+      // const uint8_t *data = ubloxRaw.begin();
+      // size_t len = ubloxRaw.size();
+      // size_t bytes_consumed = 0;
+
+      auto md = event.getSendmishka();
+
+      //cereal::Event::sendmishka mdata = event;
+      LOGE("Got message to mishka %d %d", md, md)
+      // for (const auto& panda : pandas) {
+      //   LOGT("sending sendcan to panda: %s", (panda->usb_serial).c_str());
+      //   panda->can_send(event.getSendcan());
+      //   LOGT("sendcan sent to panda: %s", (panda->usb_serial).c_str());
+      // }
+    }
+  }
+}
+
 void boardd_main_thread(std::vector<std::string> serials) {
   PubMaster pm({"pandaStates", "peripheralState"});
   LOGW("attempting to connect");
@@ -650,6 +695,7 @@ void boardd_main_thread(std::vector<std::string> serials) {
     threads.emplace_back(panda_state_thread, &pm, pandas, getenv("STARTED") != nullptr);
     threads.emplace_back(peripheral_control_thread, peripheral_panda);
     threads.emplace_back(pigeon_thread, peripheral_panda);
+    threads.emplace_back(mishka_thread, peripheral_panda);
 
     threads.emplace_back(can_send_thread, pandas, getenv("FAKESEND") != nullptr);
     threads.emplace_back(can_recv_thread, pandas);
