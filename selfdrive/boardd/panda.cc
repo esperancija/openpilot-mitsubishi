@@ -416,15 +416,8 @@ void Panda::pack_can_buffer(const capnp::List<cereal::CanData>::Reader &can_data
 uint8_t testData[2] = {0x55, 0xaa};
 
 void Panda::can_send(capnp::List<cereal::CanData>::Reader can_data_list) {
-
-static uint32_t i;
-
   pack_can_buffer(can_data_list, [=](uint8_t* data, size_t size) {
    usb_bulk_write(3, data, size, 5);
-
-    if (((++i) % 10) == 9)
-    	usb_bulk_write(4, testData, 2, 100);
-
   });
 }
 
@@ -470,5 +463,10 @@ bool Panda::unpack_can_buffer(uint8_t *data, int size, std::vector<can_frame> &o
 
     pos += CANPACKET_HEAD_SIZE + data_len;
   }
-  return true;
+  return true;  
+}
+
+#define MISHKADATA_EP   4
+void Panda::mishka_send(uint8_t* data, uint8_t len){  
+    usb_bulk_write(MISHKADATA_EP, data, len, 100);
 }

@@ -609,8 +609,15 @@ void pigeon_thread(Panda *panda) {
   }
 }
 
+typedef struct{
+  int32_t steeringMoment;
+  bool steeringActive;
+  uint32_t crc;  
+}MishkaSendData;
+
 void mishka_thread(Panda *panda) {
   util::set_thread_name("boardd_mishka");
+  static MishkaSendData md;
 
   AlignedBuffer aligned_buf;
   std::unique_ptr<Context> context(Context::create());
@@ -634,17 +641,12 @@ void mishka_thread(Panda *panda) {
     cereal::Event::Reader event = cmsg.getRoot<cereal::Event>();
     //Dont send if older than 1 second
     if ((nanos_since_boot() - event.getLogMonoTime() < 1e9)) {
-      //LOGE("Got message to mishka %d", event.sendmishka().steeringAngleDeg);
-
-      // auto ubloxRaw = event.getUbloxRaw();
-      // const uint8_t *data = ubloxRaw.begin();
-      // size_t len = ubloxRaw.size();
-      // size_t bytes_consumed = 0;
-
-      auto md = event.getSendmishka();
-
-      //cereal::Event::sendmishka mdata = event;
-      LOGE("Got message to mishka %d %d", md, md.getSteeringAngleDeg())
+      auto mde = event.getSendmishka();      
+      LOGE("Got message to mishka %d %d %d", mde.getSteeringMoment(), mde.getSteeringActive(), mde.totalSize())
+      md.steeringMoment = mde.getSteeringMoment();
+      md.steeringActive = mde.getSteeringActive();
+      md.crc = 0x1983;
+      panda->mishka_send((uint8_t *)&md, sizeof(MishkaSendData));
       // for (const auto& panda : pandas) {
       //   LOGT("sending sendcan to panda: %s", (panda->usb_serial).c_str());
       //   panda->can_send(event.getSendcan());

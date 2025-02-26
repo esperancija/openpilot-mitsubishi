@@ -1,4 +1,5 @@
 // IRQs: OTG_FS
+#include "drivers/mishka.h"
 
 typedef union {
   uint16_t w;
@@ -33,6 +34,7 @@ void usb_cb_ep3_out(void *usbdata, int len);
 void usb_cb_ep3_out_complete(void);
 void usb_cb_enumeration_complete(void);
 void usb_outep3_resume_if_paused(void);
+void mishka_usb_get(uint8_t * usbdata, uint8_t len);
 
 // **** supporting defines ****
 
@@ -763,13 +765,7 @@ void usb_irqhandler(void) {
       }
 
       if (endpoint == 4) {
-        set_gpio_mode(GPIOB, 4, MODE_OUTPUT);
-        GPIOB->ODR ^= GPIO_ODR_ODR_4;
-        puts("EP4  data ");
-		puth(usbdata[0]);
-		puts("\n");
-		puth(usbdata[1]);
-		puts("\n");
+    	mishka_usb_get(usbdata, len);
       }
 
     } else if (status == STS_SETUP_UPDT) {

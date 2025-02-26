@@ -95,7 +95,8 @@ class CarController():
 
     mishkaMsg = messaging.new_message('sendmishka')
     #mishkaData = mishkaMsg.sendmishka
-    mishkaMsg.sendmishka.steeringAngleDeg = frame
+    mishkaMsg.sendmishka.steeringMoment = frame
+    mishkaMsg.sendmishka.steeringActive = enabled
     
     #dat.steeringAngleDeg = steeringAngleDeg No response from ublox
     self.pm.send('sendmishka', mishkaMsg) # to_bytes

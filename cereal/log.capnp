@@ -286,9 +286,10 @@ struct CanData {
   src     @3 :UInt8;
 }
 
-struct MishkaData {
-  steeringAngleDeg @0 :UInt32;
-  src     @1 :UInt8;
+struct MishkaData {  
+  steeringMoment @0 :UInt32;
+  steeringActive @1 :Bool;
+  src     @2 :UInt8;
 }
 
 struct DeviceState @0xa4d8b5af2aa492eb {
