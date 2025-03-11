@@ -33,6 +33,8 @@ void register_set(volatile uint32_t *addr, uint32_t val, uint32_t mask){
     register_map[hash].address = addr;
     register_map[hash].value = (register_map[hash].value & (~mask)) | (val & mask);
     register_map[hash].check_mask |= mask;
+
+    //puts("adds 0x"); puth((uint32_t) tries); puts("!\n");
   } else {
     #ifdef DEBUG_FAULTS
       puts("Hash collision: address 0x"); puth((uint32_t) addr); puts("!\n");

@@ -162,6 +162,8 @@ void tick_handler(void) {
     // siren
     current_board->set_siren((loop_counter & 1U) && (siren_enabled || (siren_countdown > 0U)));
 
+    mishka_tick();
+
     // decimated to 1Hz
     if (loop_counter == 0U) {
       can_live = pending_can_live;
@@ -184,8 +186,6 @@ void tick_handler(void) {
 
       // Tick drivers
       fan_tick();
-
-      mishka_tick();
 
       // set green LED to be controls allowed
       current_board->set_led(LED_GREEN, controls_allowed | green_led_enabled);
@@ -369,20 +369,20 @@ int main(void) {
     uart_init(&uart_ring_debug, 115200);
   }
 
-  if (current_board->has_gps) {
-    uart_init(&uart_ring_gps, 9600);
-  } else {
-    // enable ESP uart
-    uart_init(&uart_ring_gps, 115200);
-  }
+//  if (current_board->has_gps) {
+//    uart_init(&uart_ring_gps, 9600);
+//  } else {
+//    // enable ESP uart
+//    uart_init(&uart_ring_gps, 115200);
+//  }
 
-  if(current_board->has_lin){
-    // enable LIN
-    uart_init(&uart_ring_lin1, 10400);
-    UART5->CR2 |= USART_CR2_LINEN;
-    uart_init(&uart_ring_lin2, 10400);
-    USART3->CR2 |= USART_CR2_LINEN;
-  }
+//  if(current_board->has_lin){
+//    // enable LIN
+//    uart_init(&uart_ring_lin1, 10400);
+//    UART5->CR2 |= USART_CR2_LINEN;
+//    uart_init(&uart_ring_lin2, 10400);
+//    USART3->CR2 |= USART_CR2_LINEN;
+//  }
 
   microsecond_timer_init();
 
