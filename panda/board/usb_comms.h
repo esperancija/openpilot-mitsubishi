@@ -143,6 +143,10 @@ int usb_cb_control_msg(USB_Setup_TypeDef *setup, uint8_t *resp) {
     case 0xb3:
       current_board->set_phone_power(setup->b.wValue.w > 0U);
       break;
+	// **** 0xb4: get mishka data
+	case 0xb4:
+	  resp_len = mishka_usb_send(resp);
+	  break;
     // **** 0xc0: get CAN debug info
     case 0xc0:
       puts("can tx: "); puth(can_tx_cnt);

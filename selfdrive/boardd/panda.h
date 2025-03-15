@@ -42,6 +42,10 @@ struct can_frame {
 	long src;
 };
 
+struct MishkaGetData{
+  uint16_t steerButtonAdc;
+};
+
 class Panda {
  private:
   libusb_context *ctx = NULL;
@@ -93,6 +97,7 @@ class Panda {
   void can_send(capnp::List<cereal::CanData>::Reader can_data_list);
   bool can_receive(std::vector<can_frame>& out_vec);
   void mishka_send(uint8_t* data, uint8_t len);
+  struct MishkaGetData mishka_receive();
 
 protected:
   // for unit tests

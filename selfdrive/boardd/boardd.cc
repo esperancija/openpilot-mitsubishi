@@ -637,6 +637,8 @@ void mishka_thread(Panda *panda) {
       continue;
     }
 
+    LOGE("Gor adc data %d", panda->mishka_receive().steerButtonAdc);
+
     capnp::FlatArrayMessageReader cmsg(aligned_buf.align(msg.get()));
     cereal::Event::Reader event = cmsg.getRoot<cereal::Event>();
     //Dont send if older than 1 second

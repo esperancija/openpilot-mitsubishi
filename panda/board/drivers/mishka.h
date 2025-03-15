@@ -57,7 +57,7 @@ void ADC_IRQh(void){
 #define TENZO2_ADC_CH	6
 #define SBI_ADC_CH		7
 
-
+uint16_t rawAdcData[DMA_NUM_CH];
 void mishka_init(void){
 
 //	RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;
@@ -72,32 +72,31 @@ void mishka_init(void){
 
     register_set(&(ADC1->SQR1),
     		((DMA_NUM_CH-1) << ADC_SQR1_L_Pos) |
-    		(SBI_ADC_CH << ADC_SQR1_SQ16_Pos)  |
-			(SBI_ADC_CH << ADC_SQR1_SQ15_Pos)  |
+    		(TENZO1_ADC_CH << ADC_SQR1_SQ16_Pos)  |
+			(TENZO2_ADC_CH << ADC_SQR1_SQ15_Pos)  |
 			(TENZO1_ADC_CH << ADC_SQR1_SQ14_Pos)  |
 			(TENZO2_ADC_CH << ADC_SQR1_SQ13_Pos)
 			,ADC_SQR1_L | ADC_SQR1_SQ16_Msk | ADC_SQR1_SQ15_Msk | ADC_SQR1_SQ14_Msk | ADC_SQR1_SQ13_Msk);
 
+	register_set(&(ADC1->SQR2),
+			TENZO1_ADC_CH << ADC_SQR2_SQ12_Pos  |
+			TENZO1_ADC_CH << ADC_SQR2_SQ11_Pos  |
+			TENZO1_ADC_CH << ADC_SQR2_SQ10_Pos  |
+				TENZO2_ADC_CH << ADC_SQR2_SQ9_Pos  |
+				TENZO2_ADC_CH << ADC_SQR2_SQ8_Pos  |
+			TENZO2_ADC_CH << ADC_SQR2_SQ7_Pos,
+			ADC_SQR2_SQ12_Msk | ADC_SQR2_SQ11_Msk | ADC_SQR2_SQ10_Msk |
+				ADC_SQR2_SQ9_Msk | ADC_SQR2_SQ8_Msk | ADC_SQR2_SQ7_Msk);
 
-//    register_set(&(ADC1->SQR2),
-//        		TENZO1_ADC_CH << ADC_SQR2_SQ12_Pos  |
-//    			TENZO1_ADC_CH << ADC_SQR2_SQ11_Pos  |
-//   			TENZO1_ADC_CH << ADC_SQR2_SQ10_Pos  |
-//				TENZO2_ADC_CH << ADC_SQR2_SQ9_Pos  |
-//				TENZO2_ADC_CH << ADC_SQR2_SQ8_Pos  |
-//  			TENZO2_ADC_CH << ADC_SQR2_SQ7_Pos,
-//    			ADC_SQR2_SQ12_Msk | ADC_SQR2_SQ11_Msk | ADC_SQR2_SQ10_Msk |
-//				ADC_SQR2_SQ9_Msk | ADC_SQR2_SQ8_Msk | ADC_SQR2_SQ7_Msk);
-//
-//    register_set(&(ADC1->SQR3),
-//        		TENZO2_ADC_CH << ADC_SQR3_SQ6_Pos  |
-//    			TENZO2_ADC_CH << ADC_SQR3_SQ5_Pos  |
-//    			TENZO2_ADC_CH << ADC_SQR3_SQ4_Pos  |
-//				TENZO2_ADC_CH << ADC_SQR3_SQ3_Pos  |
-//				SBI_ADC_CH << ADC_SQR3_SQ2_Pos  |
-//				SBI_ADC_CH << ADC_SQR3_SQ1_Pos,
-//    			ADC_SQR3_SQ6_Msk | ADC_SQR3_SQ5_Msk | ADC_SQR3_SQ4_Msk |
-//				ADC_SQR3_SQ3_Msk | ADC_SQR3_SQ2_Msk | ADC_SQR3_SQ1_Msk);
+	register_set(&(ADC1->SQR3),
+			TENZO2_ADC_CH << ADC_SQR3_SQ6_Pos  |
+			TENZO2_ADC_CH << ADC_SQR3_SQ5_Pos  |
+			TENZO2_ADC_CH << ADC_SQR3_SQ4_Pos  |
+				TENZO2_ADC_CH << ADC_SQR3_SQ3_Pos  |
+				SBI_ADC_CH << ADC_SQR3_SQ2_Pos  |
+				SBI_ADC_CH << ADC_SQR3_SQ1_Pos,
+			ADC_SQR3_SQ6_Msk | ADC_SQR3_SQ5_Msk | ADC_SQR3_SQ4_Msk |
+				ADC_SQR3_SQ3_Msk | ADC_SQR3_SQ2_Msk | ADC_SQR3_SQ1_Msk);
 
 
     register_set(&(ADC1->CR2),  ADC_CR2_EXTEN_0 |  ADC_CR2_EXTSEL_3 | ADC_CR2_DMA | ADC_CR2_DDS | ADC_CR2_ADON,  //| ADC_CR2_CONT,
@@ -107,13 +106,13 @@ void mishka_init(void){
   // Set DMA source and destination addresses.
   // Source: Address of the sine wave buffer in memory.
   //DMA2_Stream0->M0AR  = ( uint32_t )adcData;
-  register_set(&(DMA2_Stream0->M0AR), ( uint32_t )&current_board->mishka.rawAdcData, 0xffffffff);
+  register_set(&(DMA2_Stream0->M0AR), ( uint32_t )rawAdcData, 0xffffffff);
   // Dest.: DAC1 Ch1 '12-bit right-aligned data' register.
   //DMA2_Stream0->PAR   = ( uint32_t )&(ADC1->DR);
   register_set(&(DMA2_Stream0->PAR), ( uint32_t )&(ADC1->DR), 0xffffffff);
   // Set DMA data transfer length
   //DMA2_Stream0->NDTR  = ( uint16_t )DMA_NUM_CH;
-  register_set(&(DMA2_Stream0->NDTR), DMA_NUM_CH/2, 0xffff);
+  register_set(&(DMA2_Stream0->NDTR), DMA_NUM_CH, 0xffff);
   // Enable DMA2 Stream 1
   //DMA2_Stream0->CR   |= ( DMA_SxCR_EN );
   //register_set(&(DMA2_Stream0->CR), DMA_SxCR_EN, 0);//DMA_SxCR_EN);
@@ -144,7 +143,7 @@ void mishka_init(void){
 	//max timer value
 	//TIM3->ARR =  100; //10-1;
 	//register_set(&(TIM3->ARR), 500, 0xffff);
-	register_set(&(TIM3->ARR), 1000, 0xffff);
+	register_set(&(TIM3->ARR), 500, 0xffff);
 
 	//TIM3->DIER |= TIM_DIER_UIE;
 	register_set(&(TIM3->DIER), TIM_DIER_UIE, TIM_DIER_UIE);
@@ -178,10 +177,10 @@ void mishka_init(void){
 void mishka_tick(void){
 static uint32_t i;
 
-	puth(current_board->mishka.rawAdcData[15]); puts(" "); puth(current_board->mishka.rawAdcData[14]); puts(" ");
+	puth(rawAdcData[15]); puts(" "); puth(rawAdcData[14]); puts(" ");
 //	puth(current_board->mishka.rawAdcData[13]); puts(" "); puth(current_board->mishka.rawAdcData[12]); puts(" ");
 	puts("\n\r");
-	puth(current_board->mishka.rawAdcData[0]); puts(" "); puth(DMA2_Stream0->NDTR);
+	puth(rawAdcData[0]); puts(" "); puth(DMA2_Stream0->NDTR);
 	puts("\n\r");
 	puth(DMA2_Stream0->PAR);
 	puts("\n");
@@ -216,4 +215,17 @@ void mishka_usb_get(uint8_t * data, uint8_t len){
 		set_gpio_output(GPIOA, 9, true);
 	else
 		set_gpio_output(GPIOA, 9, false);
+}
+
+//int get_rtc_pkt(void *dat) {
+//  timestamp_t t = rtc_get_time();
+//  (void)memcpy(dat, &t, sizeof(t));
+//  return sizeof(t);
+//}
+
+int mishka_usb_send(void *data){
+
+	(void)memcpy(data, &rawAdcData, 2);
+  //(uint16_t*)data[0] = rawAdcData[0];
+  return 2;
 }
