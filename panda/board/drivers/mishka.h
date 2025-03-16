@@ -1,15 +1,65 @@
 
+
+
+#define DMA_NUM_CH 16
+
+
+#define MAX_K_KF		32768
+
+#define KALMAN_SBI_KOEF 	32200
+#define KALMAN_SBI(z, x) ((KALMAN_SBI_KOEF*z+(MAX_K_KF-KALMAN_SBI_KOEF)*x)/MAX_K_KF)
+
+#define KALMAN_KOEF 1000
+#define KALMAN(z, x) ((KALMAN_KOEF*z+(MAX_K_KF-KALMAN_KOEF)*x)/MAX_K_KF)
+
+typedef struct{
+///state of device
+	uint16_t rawAdcData[DMA_NUM_CH];
+	float steerSensor1;
+	float steerSensor2;
+	float steerButtonsAdc; //steer button input
+	uint16_t sbo; //steer button output
+
+	uint16_t speed;					//from CAN
+	int16_t steerPosition;          //from CAN
+	uint16_t steerSpeed;            //from CAN
+	int16_t steerMoment;            //from CAN
+
+	int16_t steerTargetAngle;       //calculate needed angle
+	uint16_t steerTargetTime;       //in read ldw data period 1/10s
+	int16_t steerTargetMoment; 		//
+	int16_t steerWheelMoment;       //
+
+	uint8_t  currentState;
+	uint8_t  steerButton;
+	uint8_t  opData;
+	uint8_t  key;
+	uint8_t  oldKey;
+	uint8_t  flags;
+}Mishka;
+
+Mishka mishka;
+
+/*
+ * use 	7ch sensor1
+ * 		7ch sensor 2
+ * 		2ch steer buttons ADC
+ * 	skip first measure in sequence
+ */
 void DMA2_Stream0_IRQh(void){
-static uint32_t i;
+uint8_t i;
+uint32_t ssSum[2] = {0,0};
     // Check for transfer complete interrupt
     if (DMA2->LISR & DMA_LISR_TCIF0){
-    	if ((i++) % 2)
-    		set_gpio_output(GPIOC, 12, false);
-    	else
-    		set_gpio_output(GPIOC, 12, true);
+    	set_gpio_output(GPIOC, 12, false);
 
-//        puts("NDTR\n");
-//        puth(DMA2_Stream0->NDTR);
+    	for(i=0;i<6;i++){
+    		ssSum[0] += mishka.rawAdcData[3+i];
+    		ssSum[1] += mishka.rawAdcData[10+i];
+    	}
+    	mishka.steerSensor1 = KALMAN(mishka.steerSensor1, ssSum[0]/6);
+    	mishka.steerSensor2 = KALMAN(mishka.steerSensor2, ssSum[1]/6);
+    	mishka.steerButtonsAdc = KALMAN_SBI(mishka.steerButtonsAdc, mishka.rawAdcData[1]);
 
         DMA2->LIFCR |= DMA_LIFCR_CTCIF0;  // Clear transfer complete flag
     }
@@ -17,37 +67,14 @@ static uint32_t i;
 
 void TIM3_IRQh(void){
 
-//static uint32_t i;
-//
-//	if ((i++) % 2)
-//		set_gpio_output(GPIOC, 12, false);
-//	else
-//		set_gpio_output(GPIOC, 12, true);
-
 	if (TIM3->SR & TIM_SR_UIF){
 		if (ADC1->SR & ADC_SR_OVR){
 			ADC1->SR &= ~(ADC_SR_OVR);
 			puts("ADC_OVR");
 		}
-
-		//ADC1->CR2 |= ADC_CR2_SWSTART;
+		set_gpio_output(GPIOC, 12, true);
 
 		TIM3->SR &= ~TIM_SR_UIF;
-	}
-}
-
-void ADC_IRQh(void){
-	if (ADC1->SR & ADC_SR_EOC){
-        //set_gpio_mode(GPIOB, 4, MODE_OUTPUT);
-        //GPIOB->ODR ^= GPIO_ODR_ODR_4;
-
-        puts("\n");
-        puth(ADC1->DR);
-        puts("\n");
-//        puth(DMA2_Stream0->NDTR);
-//		puts("\n");
-
-		ADC1->SR &= ~(ADC_SR_EOC | ADC_SR_OVR);
 	}
 }
 
@@ -57,11 +84,7 @@ void ADC_IRQh(void){
 #define TENZO2_ADC_CH	6
 #define SBI_ADC_CH		7
 
-uint16_t rawAdcData[DMA_NUM_CH];
 void mishka_init(void){
-
-//	RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;
-//	RCC->APB2ENR |= RCC_APB2ENR_ADC1EN;
 
 	 set_gpio_mode(GPIOA, TENZO1_ADC_CH, MODE_ANALOG);
 	 set_gpio_mode(GPIOA, TENZO2_ADC_CH, MODE_ANALOG);
@@ -73,17 +96,17 @@ void mishka_init(void){
     register_set(&(ADC1->SQR1),
     		((DMA_NUM_CH-1) << ADC_SQR1_L_Pos) |
     		(TENZO1_ADC_CH << ADC_SQR1_SQ16_Pos)  |
-			(TENZO2_ADC_CH << ADC_SQR1_SQ15_Pos)  |
+			(TENZO1_ADC_CH << ADC_SQR1_SQ15_Pos)  |
 			(TENZO1_ADC_CH << ADC_SQR1_SQ14_Pos)  |
-			(TENZO2_ADC_CH << ADC_SQR1_SQ13_Pos)
+			(TENZO1_ADC_CH << ADC_SQR1_SQ13_Pos)
 			,ADC_SQR1_L | ADC_SQR1_SQ16_Msk | ADC_SQR1_SQ15_Msk | ADC_SQR1_SQ14_Msk | ADC_SQR1_SQ13_Msk);
 
 	register_set(&(ADC1->SQR2),
 			TENZO1_ADC_CH << ADC_SQR2_SQ12_Pos  |
 			TENZO1_ADC_CH << ADC_SQR2_SQ11_Pos  |
 			TENZO1_ADC_CH << ADC_SQR2_SQ10_Pos  |
-				TENZO2_ADC_CH << ADC_SQR2_SQ9_Pos  |
-				TENZO2_ADC_CH << ADC_SQR2_SQ8_Pos  |
+			TENZO2_ADC_CH << ADC_SQR2_SQ9_Pos  |
+			TENZO2_ADC_CH << ADC_SQR2_SQ8_Pos  |
 			TENZO2_ADC_CH << ADC_SQR2_SQ7_Pos,
 			ADC_SQR2_SQ12_Msk | ADC_SQR2_SQ11_Msk | ADC_SQR2_SQ10_Msk |
 				ADC_SQR2_SQ9_Msk | ADC_SQR2_SQ8_Msk | ADC_SQR2_SQ7_Msk);
@@ -92,7 +115,7 @@ void mishka_init(void){
 			TENZO2_ADC_CH << ADC_SQR3_SQ6_Pos  |
 			TENZO2_ADC_CH << ADC_SQR3_SQ5_Pos  |
 			TENZO2_ADC_CH << ADC_SQR3_SQ4_Pos  |
-				TENZO2_ADC_CH << ADC_SQR3_SQ3_Pos  |
+			TENZO2_ADC_CH << ADC_SQR3_SQ3_Pos  |
 				SBI_ADC_CH << ADC_SQR3_SQ2_Pos  |
 				SBI_ADC_CH << ADC_SQR3_SQ1_Pos,
 			ADC_SQR3_SQ6_Msk | ADC_SQR3_SQ5_Msk | ADC_SQR3_SQ4_Msk |
@@ -103,19 +126,24 @@ void mishka_init(void){
 								ADC_CR2_EXTEN | ADC_CR2_EXTSEL | ADC_CR2_DMA | ADC_CR2_DDS | ADC_CR2_ADON);// | ADC_CR2_CONT);
 
 
+#define ADC_CYCLES	7
+    register_set(&(ADC1->SMPR1),
+        (ADC_CYCLES << (3 * TENZO1_ADC_CH)) |
+        (ADC_CYCLES << (3 * TENZO2_ADC_CH)) |
+        (ADC_CYCLES << (3 * SBI_ADC_CH)),
+        (0x7 << (3 * TENZO1_ADC_CH)) |
+        (0x7 << (3 * TENZO2_ADC_CH)) |
+        (0x7 << (3 * SBI_ADC_CH))
+    );
+
   // Set DMA source and destination addresses.
-  // Source: Address of the sine wave buffer in memory.
-  //DMA2_Stream0->M0AR  = ( uint32_t )adcData;
-  register_set(&(DMA2_Stream0->M0AR), ( uint32_t )rawAdcData, 0xffffffff);
-  // Dest.: DAC1 Ch1 '12-bit right-aligned data' register.
-  //DMA2_Stream0->PAR   = ( uint32_t )&(ADC1->DR);
+
+  register_set(&(DMA2_Stream0->M0AR), ( uint32_t )mishka.rawAdcData, 0xffffffff);
   register_set(&(DMA2_Stream0->PAR), ( uint32_t )&(ADC1->DR), 0xffffffff);
+
   // Set DMA data transfer length
-  //DMA2_Stream0->NDTR  = ( uint16_t )DMA_NUM_CH;
   register_set(&(DMA2_Stream0->NDTR), DMA_NUM_CH, 0xffff);
-  // Enable DMA2 Stream 1
-  //DMA2_Stream0->CR   |= ( DMA_SxCR_EN );
-  //register_set(&(DMA2_Stream0->CR), DMA_SxCR_EN, 0);//DMA_SxCR_EN);
+
   register_set(&(DMA2_Stream0->CR),	  ( 0x0 << DMA_SxCR_CHSEL_Pos ) | 	//0 channel
 		  	  	  	  	  	  	  	  ( 0x2 << DMA_SxCR_PL_Pos ) |  	//high proirity
 									  ( 0x1 << DMA_SxCR_MSIZE_Pos ) |	//16 bit
@@ -137,36 +165,25 @@ void mishka_init(void){
 										  DMA_SxCR_EN);
 
 
-   //use hardware timer 2 to trigger ADC 35 times per second
-	//TIM3->PSC = (CORE_FREQ/2-1); //got 1Mhz
-	register_set(&(TIM3->PSC), CORE_FREQ/2-1, 0xffff);
-	//max timer value
-	//TIM3->ARR =  100; //10-1;
-	//register_set(&(TIM3->ARR), 500, 0xffff);
-	register_set(&(TIM3->ARR), 500, 0xffff);
+   //use hardware timer 2 to trigger ADC
+	register_set(&(TIM3->PSC), CORE_FREQ/2-1, 0xffff); // 1MHz
+	//set period in uS
+	register_set(&(TIM3->ARR), 100, 0xffff);
 
-	//TIM3->DIER |= TIM_DIER_UIE;
 	register_set(&(TIM3->DIER), TIM_DIER_UIE, TIM_DIER_UIE);
 	//turn on TRGO signal for ADC -----------------------------------------
-	//TIM3->CR2 = TIM_CR2_MMS_1; //update event
 	register_set(&(TIM3->CR2), TIM_CR2_MMS_1, TIM_CR2_MMS);
 	//allow timer working & reset on overflowing
-	//TIM3->CR1 = TIM_CR1_CEN | TIM_CR1_ARPE;
 	register_set(&(TIM3->CR1), TIM_CR1_CEN | TIM_CR1_ARPE,
 									TIM_CR1_CEN | TIM_CR1_ARPE);
 
    //first start
 	ADC1->CR2 |= ADC_CR2_SWSTART;
-    //register_set(&(ADC1->CR2), ADC_CR2_SWSTART, 0);// ADC_CR2_SWSTART);     //start conversions OVR
 
    //TIM3_IRQn
-//   REGISTER_INTERRUPT(TIM3_IRQn, TIM3_IRQh, 15000U, FAULT_INTERRUPT_RATE_TICK);
-//   NVIC_SetPriority(TIM3_IRQn, 14);
-//   NVIC_EnableIRQ(TIM3_IRQn);
-
-//   REGISTER_INTERRUPT(ADC_IRQn, ADC_IRQh, 15000U, FAULT_INTERRUPT_RATE_TICK);
-//   NVIC_SetPriority(ADC_IRQn, 14);
-//   NVIC_EnableIRQ(ADC_IRQn);
+   REGISTER_INTERRUPT(TIM3_IRQn, TIM3_IRQh, 15000U, FAULT_INTERRUPT_RATE_TICK);
+   NVIC_SetPriority(TIM3_IRQn, 14);
+   NVIC_EnableIRQ(TIM3_IRQn);
 
    REGISTER_INTERRUPT(DMA2_Stream0_IRQn, DMA2_Stream0_IRQh, 15000U, FAULT_INTERRUPT_RATE_TICK);
    NVIC_SetPriority(DMA2_Stream0_IRQn, 14);
@@ -177,18 +194,25 @@ void mishka_init(void){
 void mishka_tick(void){
 static uint32_t i;
 
-	puth(rawAdcData[15]); puts(" "); puth(rawAdcData[14]); puts(" ");
-//	puth(current_board->mishka.rawAdcData[13]); puts(" "); puth(current_board->mishka.rawAdcData[12]); puts(" ");
-	puts("\n\r");
-	puth(rawAdcData[0]); puts(" "); puth(DMA2_Stream0->NDTR);
-	puts("\n\r");
-	puth(DMA2_Stream0->PAR);
-	puts("\n");
-	puth(ADC1->SR);
-	puts("\n");
+
+//	puts("\n\r");
+//	puth(mishka.steerButtonsAdc); puts(" ");
+//	puts("\n\r");
+//	puth(mishka.rawAdcData[0]); puts(" "); puth(mishka.rawAdcData[1]);puts(" ");
+//	puth(mishka.rawAdcData[2]); puts(" "); puth(mishka.rawAdcData[3]);puts(" "); puth(mishka.rawAdcData[4]); puts(" "); puth(mishka.rawAdcData[5]);puts(" ");
+//	puth(mishka.rawAdcData[6]); puts(" "); puth(mishka.rawAdcData[7]);puts(" "); puth(mishka.rawAdcData[8]);
+//	puts("\n\r");
+//	puth(mishka.rawAdcData[9]); puts(" "); puth(mishka.rawAdcData[10]);puts(" "); puth(mishka.rawAdcData[11]); puts(" "); puth(mishka.rawAdcData[12]);puts(" ");
+//	puth(mishka.rawAdcData[13]); puts(" "); puth(mishka.rawAdcData[14]);puts(" "); puth(mishka.rawAdcData[15]);
+//	puts("\n\r");
+//	puts("\n\r");
+
+//	puth(DMA2_Stream0->PAR);
+//	puts("\n");
+//	puth(ADC1->SR);
+//	puts("\n");
 //	puth(DMA2_Stream0->NDTR);
 //    puts("\n");
-
 
 	if (i%2){
 		set_gpio_output(GPIOB, 14, true);
@@ -203,11 +227,10 @@ static uint32_t i;
 	}
 
 i++;
-
 }
 
 
-//usb got data from EP4
+//usb got data from EP4 use MishkaSendData struct
 void mishka_usb_get(uint8_t * data, uint8_t len){
 
 	UNUSED(len);
@@ -217,15 +240,13 @@ void mishka_usb_get(uint8_t * data, uint8_t len){
 		set_gpio_output(GPIOA, 9, false);
 }
 
-//int get_rtc_pkt(void *dat) {
-//  timestamp_t t = rtc_get_time();
-//  (void)memcpy(dat, &t, sizeof(t));
-//  return sizeof(t);
-//}
 
+//send data to comma use MishkaGetData struct
 int mishka_usb_send(void *data){
 
-	(void)memcpy(data, &rawAdcData, 2);
+uint16_t tmp = 	mishka.steerButtonsAdc;
+
+	(void)memcpy(data, &tmp, 2);
   //(uint16_t*)data[0] = rawAdcData[0];
   return 2;
 }

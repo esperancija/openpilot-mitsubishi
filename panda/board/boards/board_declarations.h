@@ -15,36 +15,6 @@ typedef void (*board_set_phone_power)(bool enabled);
 typedef void (*board_set_clock_source_mode)(uint8_t mode);
 typedef void (*board_set_siren)(bool enabled);
 
-#define DMA_NUM_CH 16
-
-typedef struct{
-///state of device
-       uint8_t  currentState;
-
-       uint8_t         steerButton;
-
-       int16_t steerSensor1;
-       int16_t steerSensor2;
-
-       uint16_t accControlAdc; //steer button input
-       uint16_t sbo; //steer button output
-       uint16_t speed;//from CAN
-       int16_t steerPosition;          //from CAN
-       uint16_t steerSpeed;            //from CAN
-       int16_t steerMoment;            //from CAN
-       int16_t steerTargetAngle;       //calculate needed angle
-       uint16_t steerTargetTime;       //in read ldw data period 1/10s
-       int16_t steerTargetMoment; //in percent settings value
-       int16_t steerWheelMoment;       //in percent
-       uint8_t opData;
-
-       uint8_t         key;
-       uint8_t         oldKey;
-       uint8_t         showState;
-       uint8_t         flags;
-       volatile uint16_t rawAdcData[DMA_NUM_CH];
-}Mishka;
-
 struct board {
   const char *board_type;
   const harness_configuration *harness_config;
@@ -68,7 +38,6 @@ struct board {
   board_set_phone_power set_phone_power;
   board_set_clock_source_mode set_clock_source_mode;
   board_set_siren set_siren;
-  Mishka mishka;
 };
 
 // ******************* Definitions ********************
