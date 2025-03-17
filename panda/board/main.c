@@ -5,7 +5,7 @@
 #include "drivers/usb.h"
 #include "drivers/gmlan_alt.h"
 #include "drivers/kline_init.h"
-
+#include "drivers/mishka.h"
 
 
 #include "early_init.h"

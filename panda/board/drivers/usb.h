@@ -1,6 +1,4 @@
 // IRQs: OTG_FS
-#include "drivers/mishka.h"
-
 typedef union {
   uint16_t w;
   struct BW {
@@ -764,9 +762,11 @@ void usb_irqhandler(void) {
         usb_cb_ep3_out(usbdata, len);
       }
 
+#ifndef BOOTSTUB
       if (endpoint == 4) {
     	mishka_usb_get(usbdata, len);
       }
+#endif
 
     } else if (status == STS_SETUP_UPDT) {
       (void)USB_ReadPacket(&setup, 8);

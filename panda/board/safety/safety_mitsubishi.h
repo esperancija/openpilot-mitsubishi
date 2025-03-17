@@ -1,3 +1,6 @@
+
+//#include "../drivers/mishka_declaration.h"
+
 // global torque limit
 const int MITSUBISHI_MAX_TORQUE = 1500;       // max torque cmd allowed ever
 
@@ -57,6 +60,22 @@ int mitsubishi_dbc_eps_torque_factor = 100;   // conversion factor for STEER_TOR
 //}
 
 static int mitsubishi_rx_hook(CANPacket_t *to_push) {
+
+    int addr = GET_ADDR(to_push);
+//    int len = GET_LEN(to_push);
+//    int bus = GET_BUS(to_push);
+
+	if (addr == STEERING_WHEEL_POS_ID){
+//			murchik.steerPosition = (((CAN->sFIFOMailBox[0].RDLR & 0xff) << 8) +
+//											((CAN->sFIFOMailBox[0].RDLR >> 8) & 0xff)) - 0x1000;//0x0ffd;//0x1000;
+		    mishka.steerPosition = ((GET_BYTE(to_push, 0) << 8) + GET_BYTE(to_push, 1)) - 0x1000;
+		    mishka.flags |= runMomentCalcFlag;
+	}else if (addr == SPEED_ID){
+		//murchik.speed = 10*(((CAN->sFIFOMailBox[0].RDLR & 0xff) << 8) + ((CAN->sFIFOMailBox[0].RDLR >> 8) & 0xff))/12;
+		mishka.speed = ((GET_BYTE(to_push, 0) << 8) + GET_BYTE(to_push, 1))/12;
+
+	}
+
 //    // enter controls on rising edge of ACC, exit controls on ACC off
 //    if (addr == 0x240) {
 //      int cruise_engaged = ((GET_BYTES_48(to_push) >> 9) & 1U);
@@ -66,7 +85,7 @@ static int mitsubishi_rx_hook(CANPacket_t *to_push) {
 //      if (!cruise_engaged) {
 //        controls_allowed = 0;
 //      }
-//      cruise_engaged_prev = cruise_engaged;
+//      cruise_engaged_prev = cruise_engaged; ->rx
 //    }
   controls_allowed = 1;
   UNUSED(to_push);
