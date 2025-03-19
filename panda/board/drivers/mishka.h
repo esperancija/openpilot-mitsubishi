@@ -180,6 +180,14 @@ static uint32_t cnt;
 }
 
 
+int16_t limitMoment(int16_t moment, int16_t value){
+	if (moment >= value)
+		moment = value;
+	else if (moment <= -value)
+		moment = -value;
+	return moment;
+}
+
 /*
  * use 	7ch sensor1
  * 		7ch sensor 2
@@ -189,6 +197,9 @@ static uint32_t cnt;
 void DMA2_Stream0_IRQh(void){
 uint8_t i;
 uint32_t ssSum[2] = {0,0};
+uint16_t value1, value2;
+static int16_t oldVal1, oldVal2;
+
     // Check for transfer complete interrupt
     if (DMA2->LISR & DMA_LISR_TCIF0){
     	for(i=0;i<6;i++){
@@ -199,11 +210,43 @@ uint32_t ssSum[2] = {0,0};
     	mishka.steerSensor2 = KALMAN(mishka.steerSensor2, ssSum[1]/6);
     	mishka.steerButtonsAdc = KALMAN_SBI(mishka.steerButtonsAdc, mishka.rawAdcData[1]);
 
+    	mishka.steerWheelMoment = mishka.steerSensor1 - mishka.steerSensor2;
+
+
+	/*******************************************************************************************/
+		if ((mishka.currentState == controlState)){
+			momentAdd = mishka.steerTargetMoment;
+		}else if (mishka.currentState == offState)
+			momentAdd = 0;
+
+		limitMoment(momentAdd, MAX_MOMENT);
+
+		value1 = mishka.steerSensor1+momentAdd;
+		value2 = mishka.steerSensor2-momentAdd;
+
+	#define MAX_ALOW_MOMENT	4093	//must be lower than 4096
+		//check overflow
+		if ((mishka.steerSensor1 < MAX_ALOW_MOMENT) && (mishka.steerSensor2 < MAX_ALOW_MOMENT) &&
+				(value1 < MAX_ALOW_MOMENT) && (value2 < MAX_ALOW_MOMENT)){
+			DAC->DHR12R1 = value1;
+			DAC->DHR12R2 = value2;
+
+			oldVal1 = value1;
+			oldVal2 = value2;
+		}else{
+			DAC->DHR12R1 = oldVal1;//murchik.steerSensor1;
+			DAC->DHR12R2 = oldVal2;//murchik.steerSensor2;
+
+			RED_ON;
+		}
+
         DMA2->LIFCR |= DMA_LIFCR_CTCIF0;  // Clear transfer complete flag
     }
 }
 
 void TIM3_IRQh(void){
+
+static uint32_t i;
 
 	if (TIM3->SR & TIM_SR_UIF){
 		if (ADC1->SR & ADC_SR_OVR){
@@ -211,14 +254,16 @@ void TIM3_IRQh(void){
 			puts("ADC_OVR");
 		}
 
-		if (mishka.flags & runMomentCalcFlag){
+		if ((mishka.flags & runMomentCalcFlag) || ((i%125) == 0)){
 			set_gpio_output(GPIOC, 12, true);
 			doSteerControl();
 			mishka.flags &= ~runMomentCalcFlag;
+			i = 0;
 		}
 		set_gpio_output(GPIOC, 12, false);
 
 		TIM3->SR &= ~TIM_SR_UIF;
+		i++;
 	}
 }
 
@@ -229,6 +274,9 @@ void mishka_init(void){
 	 set_gpio_mode(GPIOA, TENZO1_ADC_CH, MODE_ANALOG);
 	 set_gpio_mode(GPIOA, TENZO2_ADC_CH, MODE_ANALOG);
 	 set_gpio_mode(GPIOA, SBI_ADC_CH, MODE_ANALOG);
+
+	 //init DAC
+	 register_set(&(DAC->CR), DAC_CR_EN1 | DAC_CR_EN2, 0x3FFF3FFFU);
 
     register_set(&(ADC1->CR1), ADC_CR1_SCAN | ADC_CR1_EOCIE,
     									ADC_CR1_SCAN | ADC_CR1_EOCIE);
@@ -369,8 +417,8 @@ static uint32_t i;
 //		onState = 0;
 //	}
 
-	//if (mishka.currentState == controlState)
-	if (onState){
+	if (mishka.currentState == controlState){
+	//if (onState){
 		GREEN_ON;
 	}else{
 		GREEN_OFF;
@@ -385,21 +433,27 @@ static uint32_t i;
 	oldSteerKey = steerKey;
 
 
-
-	puts("\n\r");
-	puth(mishka.steerPosition); puts(" ");puth(mishka.currentState);
-	puts("\n\r");
-	puth(steerKey); puts(" "); puth(IS_BUT_PRESS);
-	puts("\n\r");
-	puts("\n\r");
-//	puth(mishka.rawAdcData[0]); puts(" "); puth(mishka.rawAdcData[1]);puts(" ");
-//	puth(mishka.rawAdcData[2]); puts(" "); puth(mishka.rawAdcData[3]);puts(" "); puth(mishka.rawAdcData[4]); puts(" "); puth(mishka.rawAdcData[5]);puts(" ");
-//	puth(mishka.rawAdcData[6]); puts(" "); puth(mishka.rawAdcData[7]);puts(" "); puth(mishka.rawAdcData[8]);
-//	puts("\n\r");
-//	puth(mishka.rawAdcData[9]); puts(" "); puth(mishka.rawAdcData[10]);puts(" "); puth(mishka.rawAdcData[11]); puts(" "); puth(mishka.rawAdcData[12]);puts(" ");
-//	puth(mishka.rawAdcData[13]); puts(" "); puth(mishka.rawAdcData[14]);puts(" "); puth(mishka.rawAdcData[15]);
-//	puts("\n\r");
-//	puts("\n\r");
+	if (i%2){
+		puts("\n\r");
+		//puth(mishka.steerPosition); puts(" ");puth(mishka.steerTargetAngle);
+		puts("steerTargetMoment=");puth(mishka.steerTargetMoment);puts("\n\r");
+		puts("steerTargetAngle=");puth(mishka.steerTargetAngle);puts("\n\r");
+		puts("steerPosition=");puth(mishka.steerPosition);puts("\n\r");
+		puts("speed=");puth(mishka.speed);puts("\n\r");
+		puts("currentState=");puth(mishka.currentState);puts("\n\r");
+		puts("\n\r");
+	//	puth(steerKey); puts(" "); puth(mishka.opData);
+	//	puts("\n\r");
+	//	puts("\n\r");
+	//	puth(mishka.rawAdcData[0]); puts(" "); puth(mishka.rawAdcData[1]);puts(" ");
+	//	puth(mishka.rawAdcData[2]); puts(" "); puth(mishka.rawAdcData[3]);puts(" "); puth(mishka.rawAdcData[4]); puts(" "); puth(mishka.rawAdcData[5]);puts(" ");
+	//	puth(mishka.rawAdcData[6]); puts(" "); puth(mishka.rawAdcData[7]);puts(" "); puth(mishka.rawAdcData[8]);
+	//	puts("\n\r");
+	//	puth(mishka.rawAdcData[9]); puts(" "); puth(mishka.rawAdcData[10]);puts(" "); puth(mishka.rawAdcData[11]); puts(" "); puth(mishka.rawAdcData[12]);puts(" ");
+	//	puth(mishka.rawAdcData[13]); puts(" "); puth(mishka.rawAdcData[14]);puts(" "); puth(mishka.rawAdcData[15]);
+	//	puts("\n\r");
+	//	puts("\n\r");
+	}
 
 //	puth(DMA2_Stream0->PAR);
 //	puts("\n");

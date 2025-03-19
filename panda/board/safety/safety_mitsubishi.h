@@ -43,35 +43,9 @@ static int mitsubishi_rx_hook(CANPacket_t *to_push) {
 		    mishka.flags |= runMomentCalcFlag;
 	}else if (addr == SPEED_ID){
 		//murchik.speed = 10*(((CAN->sFIFOMailBox[0].RDLR & 0xff) << 8) + ((CAN->sFIFOMailBox[0].RDLR >> 8) & 0xff))/12;
-		mishka.speed = ((GET_BYTE(to_push, 0) << 8) + GET_BYTE(to_push, 1))/12;
-
-	}else if (addr == STEER_CONTROL_ID){
-		mishka.opActiveTimer = OP_ACTIVE_TIMEOUT;
-		//mishka.steerTargetAngle = ((CAN->sFIFOMailBox[0].RDLR >> 16) & 0x7ff) - 1024;
-		mishka.steerTargetAngle = (((GET_BYTE(to_push, 3) << 8) + GET_BYTE(to_push, 2)) & 0x7ff) - 1024;
-		mishka.steerMoment = (((GET_BYTE(to_push, 1) << 8) + GET_BYTE(to_push, 0)) & 0x7ff) - 1024;
-
-		//mishka.opData = ((CAN->sFIFOMailBox[0].RDLR >> 11) & 0x1f);
-		mishka.opData = ((GET_BYTE(to_push, 1) >> 3) & 0x1f);
-
-//		murchik.accTest1 = ((CAN->sFIFOMailBox[0].RDHR) & 0xff);
-//		murchik.accTest2 = ((CAN->sFIFOMailBox[0].RDHR >> 8) & 0xff);
-//	#if (CONTROL_MODE == MOMENT_CONTROL)
-//		murchik.steerTargetMoment = ((CAN->sFIFOMailBox[0].RDLR) & 0x7ff) - 1024;
-//	#endif
+		mishka.speed = 10*((GET_BYTE(to_push, 0) << 8) + GET_BYTE(to_push, 1))/12;
 	}
 
-//    // enter controls on rising edge of ACC, exit controls on ACC off
-//    if (addr == 0x240) {
-//      int cruise_engaged = ((GET_BYTES_48(to_push) >> 9) & 1U);
-//      if (cruise_engaged && !cruise_engaged_prev) {
-//        controls_allowed = 1;
-//      }
-//      if (!cruise_engaged) {
-//        controls_allowed = 0;
-//      }
-//      cruise_engaged_prev = cruise_engaged; ->rx
-//    }
   controls_allowed = 1;
   UNUSED(to_push);
   return true;
@@ -81,7 +55,7 @@ static int mitsubishi_rx_hook(CANPacket_t *to_push) {
 static int mitsubishi_tx_hook(CANPacket_t *to_send, bool longitudinal_allowed) {
 
   int tx = 0;
-//  int addr = GET_ADDR(to_send);
+  //int addr = GET_ADDR(to_send);
 //  int bus = GET_BUS(to_send);
 
 //  if (!msg_allowed(to_send, MITSUBISHI_TX_MSGS, sizeof(MITSUBISHI_TX_MSGS)/sizeof(MITSUBISHI_TX_MSGS[0]))) {
@@ -89,10 +63,22 @@ static int mitsubishi_tx_hook(CANPacket_t *to_send, bool longitudinal_allowed) {
 //  }
 //    if (longitudinal_allowed)
 //	tx = 0;
+
+  if (GET_ADDR(to_send) == STEER_CONTROL_ID){
+  		mishka.opActiveTimer = OP_ACTIVE_TIMEOUT;
+  		//mishka.steerTargetAngle = ((CAN->sFIFOMailBox[0].RDLR >> 16) & 0x7ff) - 1024;
+  		mishka.steerTargetAngle = (((GET_BYTE(to_send, 3) << 8) + GET_BYTE(to_send, 2)) & 0x7ff) - 1024;
+  		//mishka.steerMoment = (((GET_BYTE(to_send, 1) << 8) + GET_BYTE(to_send, 0)) & 0x7ff) - 1024;
+
+  		//mishka.opData = ((CAN->sFIFOMailBox[0].RDLR >> 11) & 0x1f);
+  		mishka.opData = ((GET_BYTE(to_send, 1) >> 3) & 0x1f);
+  		tx = 1;
+  	}
+
   	UNUSED(longitudinal_allowed);
 
-    if (GET_ADDR(to_send) == 0x3b6)
-        tx = 1;
+//    if (GET_ADDR(to_send) == 0x3b6)
+//        tx = 1;
 
   if (relay_malfunction) {
     tx = 0;

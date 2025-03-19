@@ -49,7 +49,7 @@ class CarController():
     can_sends = []
 
     if self.sm is None:
-       self.sm = messaging.SubMaster(['liveParameters','carState', 'getmishka']) #sm['carState'].yawRate
+       self.sm = messaging.SubMaster(['liveParameters','carState']) #sm['carState'].yawRate
     else:
       self.sm.update(0)
 
@@ -58,11 +58,6 @@ class CarController():
     steerRatio = int(round(self.sm['liveParameters'].steerRatio * 10))
     #steerRatio = int(actuators.accel)
 
-    pressedButton = self.sm['getmishka'].pressedButton
-    activateOP = self.sm['getmishka'].activateOP
-
-    print("pressedButton=%d, activateOP=%d" % (pressedButton, activateOP))
-    
     #stiff = int(round(self.sm['liveParameters'].stiffnessFactor  * 100))
     #stiff = int(round(self.sm['liveParameters'].roll * 10))
 

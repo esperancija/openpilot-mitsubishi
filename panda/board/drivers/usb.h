@@ -762,12 +762,6 @@ void usb_irqhandler(void) {
         usb_cb_ep3_out(usbdata, len);
       }
 
-#ifndef BOOTSTUB
-      if (endpoint == 4) {
-    	mishka_usb_get(usbdata, len);
-      }
-#endif
-
     } else if (status == STS_SETUP_UPDT) {
       (void)USB_ReadPacket(&setup, 8);
       #ifdef DEBUG_USB
@@ -825,15 +819,6 @@ void usb_irqhandler(void) {
       puts(" OUT ENDPOINT\n");
     #endif
 
-
-		  if ((USBx_OUTEP(4)->DOEPINT & USB_OTG_DOEPINT_XFRC) != 0) {
-			#ifdef DEBUG_USB
-			  puts("  OUT1 PACKET XFRC\n");
-			#endif
-			USBx_OUTEP(4)->DOEPTSIZ = (1U << 19) | 0x02U;
-			USBx_OUTEP(4)->DOEPCTL |= USB_OTG_DOEPCTL_EPENA | USB_OTG_DOEPCTL_CNAK;
-		  }
-
     if ((USBx_OUTEP(2)->DOEPINT & USB_OTG_DOEPINT_XFRC) != 0) {
       #ifdef DEBUG_USB
         puts("  OUT2 PACKET XFRC\n");
@@ -878,7 +863,6 @@ void usb_irqhandler(void) {
     }
 
     USBx_OUTEP(0)->DOEPINT = USBx_OUTEP(0)->DOEPINT;
-    	USBx_OUTEP(4)->DOEPINT = USBx_OUTEP(4)->DOEPINT;
     USBx_OUTEP(2)->DOEPINT = USBx_OUTEP(2)->DOEPINT;
     USBx_OUTEP(3)->DOEPINT = USBx_OUTEP(3)->DOEPINT;
   }

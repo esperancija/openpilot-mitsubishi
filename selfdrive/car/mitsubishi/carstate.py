@@ -7,6 +7,7 @@ from selfdrive.car.interfaces import CarStateBase
 from opendbc.can.parser import CANParser
 from common.conversions import Conversions as CV
 from selfdrive.car.mitsubishi.values import DBC
+import cereal.messaging as messaging
 
 
 class CarState(CarStateBase):
@@ -26,6 +27,7 @@ class CarState(CarStateBase):
     self.low_speed_lockout = False
     self.acc_type = 1
     self.newSteerActuatorDelay = 0.3
+    self.sm = None
 
   def swapBytesSigned(self, data):
     ret = ((data & 0xff) << 8) + ((data >> 8)  & 0xff)
@@ -37,6 +39,18 @@ class CarState(CarStateBase):
     return ((data & 0x0f) << 8) + ((data >> 8)  & 0xff)
 
   def update(self, cp, cp_cam):
+
+    if self.sm is None:
+       self.sm = messaging.SubMaster(['getmishka'])
+    else:
+      self.sm.update(0)
+
+
+    pressedButton = self.sm['getmishka'].pressedButton
+    activateOP = self.sm['getmishka'].activateOP
+    #print("pressedButton=%d, activateOP=%d" % (pressedButton, activateOP))      
+
+
     ret = car.CarState.new_message()
 
     ret.doorOpen = any([cp.vl["DOORS_STATUS"]["DOOR_OPEN_FL"], cp.vl["DOORS_STATUS"]["DOOR_OPEN_FR"],
@@ -47,15 +61,6 @@ class CarState(CarStateBase):
 
     ret.gas = 0 #cp.vl["GAS_PEDAL"]["GAS_PEDAL"]
     ret.gasPressed = ret.gas > 2
-
-    #print("gas = %d" % (ret.gas))
-    #ret.gas = cp.vl["JOYSTICK_COMMAND"]["TEST_DATA"]
-    #ret.gasPressed = False
-
-    # erpm = int(cp.vl["ENGINE_RPM_ID"]["ENGINE_RPM"])
-    # erpm = ((erpm & 0xff) << 8) + ((erpm >> 8)  & 0xff)
-    #ret.engineRPM  = self.swapBytesUnsigned(int(cp.vl["ENGINE_RPM_ID"]["ENGINE_RPM"])) #cp.vl["ENGINE_RPM_ID"]["ENGINE_RPM"]
-
 
     speed_factor = 0.27/4
     ret.wheelSpeeds.fl = self.swapBytesUnsigned(int(cp.vl["WHEEL_SPEEDS_1"]["WHEEL_SPEED_FL"])) * CV.KPH_TO_MS * speed_factor
@@ -101,8 +106,8 @@ class CarState(CarStateBase):
     #ret.cruiseState.enabled = bool(cp.vl["ACC_STATUS"]["CRUISE_ACTIVE"])
 
 
-    #ret.cruiseState.enabled = bool(cp.vl["JOYSTICK_COMMAND"]["OP_ON"])
-    #ret.cruiseState.available = bool(cp.vl["JOYSTICK_COMMAND"]["OP_ON"])
+    ret.cruiseState.enabled = activateOP #bool(cp.vl["JOYSTICK_COMMAND"]["OP_ON"])
+    ret.cruiseState.available = activateOP #bool(cp.vl["JOYSTICK_COMMAND"]["OP_ON"])
 
     #use to transfer steerRatioValue
     #ret.yawRate = int(cp.vl["JOYSTICK_COMMAND"]["STEER_RATIO_VAL"])/10

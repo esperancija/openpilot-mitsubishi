@@ -114,7 +114,7 @@ uint16_t pidNFData[] =  {70, 10,  0,  0, 0};  //in 1/10
 #define STEER_CONTROL_ID			0x3b6
 
 
-#define IS_BUT_PRESS	get_gpio_input(GPIOA, 10)
+#define IS_BUT_PRESS	!get_gpio_input(GPIOA, 10)
 #define FS_RELAY_ON		set_gpio_output(GPIOA, 9, false)
 #define FS_RELAY_OFF	set_gpio_output(GPIOA, 9, true)
 
