@@ -1,33 +1,4 @@
 
-//#include "../drivers/mishka_declaration.h"
-
-// global torque limit
-const int MITSUBISHI_MAX_TORQUE = 1500;       // max torque cmd allowed ever
-
-// rate based torque limit + stay within actually applied
-// packet is sent at 100hz, so this limit is 1000/sec
-const int MITSUBISHI_MAX_RATE_UP = 10;        // ramp up slow
-const int MITSUBISHI_MAX_RATE_DOWN = 25;      // ramp down fast
-const int MITSUBISHI_MAX_TORQUE_ERROR = 350;  // max torque cmd in excess of torque motor
-
-// real time torque limit to prevent controls spamming
-// the real time limit is 1500/sec
-const int MITSUBISHI_MAX_RT_DELTA = 375;      // max delta torque allowed for real time checks
-const uint32_t MITSUBISHI_RT_INTERVAL = 250000;    // 250ms between real time checks
-
-// longitudinal limits
-const int MITSUBISHI_MAX_ACCEL = 2000;        // 2.0 m/s2
-const int MITSUBISHI_MIN_ACCEL = -3500;       // -3.5 m/s2
-
-const int MITSUBISHI_STANDSTILL_THRSLD = 100;  // 1kph
-
-// Roughly calculated using the offsets in openpilot +5%: Controls Unresposive
-// In openpilot: ((gas1_norm + gas2_norm)/2) > 15
-// gas_norm1 = ((gain_dbc*gas1) + offset1_dbc)
-// gas_norm2 = ((gain_dbc*gas2) + offset2_dbc)
-// In this safety: ((gas1 + gas2)/2) > THRESHOLD
-const int MITSUBISHI_GAS_INTERCEPTOR_THRSLD = 845;
-#define MITSUBISHI_GET_INTERCEPTOR(msg) (((GET_BYTE((msg), 0) << 8) + GET_BYTE((msg), 1) + (GET_BYTE((msg), 2) << 8) + GET_BYTE((msg), 3)) / 2) // avg between 2 tracks
 
 const CanMsg MITSUBISHI_TX_MSGS[] = {{0x3b6, 0, 8}};  // interceptor
 
@@ -74,6 +45,20 @@ static int mitsubishi_rx_hook(CANPacket_t *to_push) {
 		//murchik.speed = 10*(((CAN->sFIFOMailBox[0].RDLR & 0xff) << 8) + ((CAN->sFIFOMailBox[0].RDLR >> 8) & 0xff))/12;
 		mishka.speed = ((GET_BYTE(to_push, 0) << 8) + GET_BYTE(to_push, 1))/12;
 
+	}else if (addr == STEER_CONTROL_ID){
+		mishka.opActiveTimer = OP_ACTIVE_TIMEOUT;
+		//mishka.steerTargetAngle = ((CAN->sFIFOMailBox[0].RDLR >> 16) & 0x7ff) - 1024;
+		mishka.steerTargetAngle = (((GET_BYTE(to_push, 3) << 8) + GET_BYTE(to_push, 2)) & 0x7ff) - 1024;
+		mishka.steerMoment = (((GET_BYTE(to_push, 1) << 8) + GET_BYTE(to_push, 0)) & 0x7ff) - 1024;
+
+		//mishka.opData = ((CAN->sFIFOMailBox[0].RDLR >> 11) & 0x1f);
+		mishka.opData = ((GET_BYTE(to_push, 1) >> 3) & 0x1f);
+
+//		murchik.accTest1 = ((CAN->sFIFOMailBox[0].RDHR) & 0xff);
+//		murchik.accTest2 = ((CAN->sFIFOMailBox[0].RDHR >> 8) & 0xff);
+//	#if (CONTROL_MODE == MOMENT_CONTROL)
+//		murchik.steerTargetMoment = ((CAN->sFIFOMailBox[0].RDLR) & 0x7ff) - 1024;
+//	#endif
 	}
 
 //    // enter controls on rising edge of ACC, exit controls on ACC off
@@ -102,15 +87,16 @@ static int mitsubishi_tx_hook(CANPacket_t *to_send, bool longitudinal_allowed) {
 //  if (!msg_allowed(to_send, MITSUBISHI_TX_MSGS, sizeof(MITSUBISHI_TX_MSGS)/sizeof(MITSUBISHI_TX_MSGS[0]))) {
 //    tx = 0;
 //  }
-    if (longitudinal_allowed)
-	tx = 0;
+//    if (longitudinal_allowed)
+//	tx = 0;
+  	UNUSED(longitudinal_allowed);
 
     if (GET_ADDR(to_send) == 0x3b6)
         tx = 1;
 
-//  if (relay_malfunction) {
-//    tx = 0;
-//  }
+  if (relay_malfunction) {
+    tx = 0;
+  }
 
   return tx;
 }

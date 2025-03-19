@@ -210,8 +210,9 @@ void TIM3_IRQh(void){
 			ADC1->SR &= ~(ADC_SR_OVR);
 			puts("ADC_OVR");
 		}
-		set_gpio_output(GPIOC, 12, true);
+
 		if (mishka.flags & runMomentCalcFlag){
+			set_gpio_output(GPIOC, 12, true);
 			doSteerControl();
 			mishka.flags &= ~runMomentCalcFlag;
 		}
@@ -329,14 +330,68 @@ void mishka_init(void){
    NVIC_EnableIRQ(DMA2_Stream0_IRQn);
 }
 
+
+uint8_t getAccKey(void){
+	if (mishka.steerButtonsAdc > (BTN_NOKEY_LVL+BTN_UP_LVL)/2)
+		return noKey;
+	else if ((mishka.steerButtonsAdc <= (BTN_NOKEY_LVL+BTN_UP_LVL)/2) &&
+			(mishka.steerButtonsAdc > (BTN_UP_LVL+BTN_DOWN_LVL)/2))
+		return upKey;
+	else if ((mishka.steerButtonsAdc <= (BTN_UP_LVL+BTN_DOWN_LVL)/2) &&
+			(mishka.steerButtonsAdc > (BTN_DOWN_LVL+BTN_CANCEL_LVL)/2))
+		return downKey;
+	else if ((mishka.steerButtonsAdc <= (BTN_DOWN_LVL+BTN_CANCEL_LVL)/2) &&
+			(mishka.steerButtonsAdc > (BTN_CANCEL_LVL+BTN_ACC_LVL)/2))
+		return cancelKey;
+	else if (mishka.steerButtonsAdc > BTN_ACC_LVL/2)
+		return accOnKey;
+	else
+		return lkasOnKey;
+}
+
+static uint32_t statusCnt;
+static uint8_t onState;
+static uint8_t oldSteerKey;
+	   uint8_t steerKey;
+static uint16_t bntPressCnt;
+
 //8 hz
 void mishka_tick(void){
 static uint32_t i;
 
+	steerKey = getAccKey();
+	if (((steerKey == lkasOnKey)) && (oldSteerKey == noKey)){
+		onState ^= 1;
+		statusCnt = 0;
+	}
 
-//	puts("\n\r");
-//	puth(mishka.steerButtonsAdc); puts(" ");
-//	puts("\n\r");
+//	if ((statusCnt > 5) && (onState) && ((mishka.currentState != controlState)) && (!(IS_BUT_PRESS))){ //500 ms
+//		onState = 0;
+//	}
+
+	//if (mishka.currentState == controlState)
+	if (onState){
+		GREEN_ON;
+	}else{
+		GREEN_OFF;
+	}
+
+	if (steerKey){
+		bntPressCnt++;
+	}else{
+		bntPressCnt = 0;
+	}
+
+	oldSteerKey = steerKey;
+
+
+
+	puts("\n\r");
+	puth(mishka.steerPosition); puts(" ");puth(mishka.currentState);
+	puts("\n\r");
+	puth(steerKey); puts(" "); puth(IS_BUT_PRESS);
+	puts("\n\r");
+	puts("\n\r");
 //	puth(mishka.rawAdcData[0]); puts(" "); puth(mishka.rawAdcData[1]);puts(" ");
 //	puth(mishka.rawAdcData[2]); puts(" "); puth(mishka.rawAdcData[3]);puts(" "); puth(mishka.rawAdcData[4]); puts(" "); puth(mishka.rawAdcData[5]);puts(" ");
 //	puth(mishka.rawAdcData[6]); puts(" "); puth(mishka.rawAdcData[7]);puts(" "); puth(mishka.rawAdcData[8]);
@@ -353,17 +408,17 @@ static uint32_t i;
 //	puth(DMA2_Stream0->NDTR);
 //    puts("\n");
 
-	if (i%2){
-		set_gpio_output(GPIOB, 14, true);
-		set_gpio_output(GPIOB, 15, false);
-
-		//set_gpio_output(GPIOC, 12, true);
-	}else{
-		set_gpio_output(GPIOB, 14, false);
-		set_gpio_output(GPIOB, 15, true);
-
-		//set_gpio_output(GPIOC, 12, false);
-	}
+//	if (i%2){
+//		set_gpio_output(GPIOB, 14, true);
+//		set_gpio_output(GPIOB, 15, false);
+//
+//		//set_gpio_output(GPIOC, 12, true);
+//	}else{
+//		set_gpio_output(GPIOB, 14, false);
+//		set_gpio_output(GPIOB, 15, true);
+//
+//		//set_gpio_output(GPIOC, 12, false);
+//	}
 
 i++;
 }
@@ -372,19 +427,19 @@ i++;
 void mishka_usb_get(uint8_t * data, uint8_t len){
 
 	UNUSED(len);
-	if (data[4])
-		set_gpio_output(GPIOA, 9, true);
-	else
-		set_gpio_output(GPIOA, 9, false);
+	UNUSED(data);
+//	if (data[4])
+//		set_gpio_output(GPIOA, 9, true);
+//	else
+//		set_gpio_output(GPIOA, 9, false);
 }
 
 
 //send data to comma use MishkaGetData struct
 int mishka_usb_send(void *data){
 
-uint16_t tmp = 	mishka.steerButtonsAdc;
-
-	(void)memcpy(data, &tmp, 2);
+	MishkaData md = {.pressedButton = steerKey, .activateOP = onState, .crc = 0x1983};
+	(void)memcpy(data, &md, sizeof(MishkaData));
   //(uint16_t*)data[0] = rawAdcData[0];
   return 2;
 }

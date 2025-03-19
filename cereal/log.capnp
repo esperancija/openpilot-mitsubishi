@@ -286,10 +286,10 @@ struct CanData {
   src     @3 :UInt8;
 }
 
-struct MishkaData {  
-  steeringMoment @0 :UInt32;
-  steeringActive @1 :Bool;
-  src     @2 :UInt8;
+struct MishkaGetData{
+  pressedButton @0 :UInt8;
+  activateOP    @1 :Bool;
+  crc           @2 :UInt8;  
 }
 
 struct DeviceState @0xa4d8b5af2aa492eb {
@@ -1762,7 +1762,7 @@ struct Event {
     radarState @13 :RadarState;
     liveTracks @16 :List(LiveTracks);
     sendcan @17 :List(CanData);
-    sendmishka @86 :MishkaData;
+    getmishka @86 :MishkaGetData;
     liveCalibration @19 :LiveCalibrationData;
     carState @22 :Car.CarState;
     carControl @23 :Car.CarControl;

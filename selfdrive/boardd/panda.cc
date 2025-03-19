@@ -466,30 +466,14 @@ bool Panda::unpack_can_buffer(uint8_t *data, int size, std::vector<can_frame> &o
   return true;  
 }
 
-#define MISHKADATA_EP   4
-void Panda::mishka_send(uint8_t* data, uint8_t len){  
-    usb_bulk_write(MISHKADATA_EP, data, len, 100);
-}
+// #define MISHKADATA_EP   4
+// void Panda::mishka_send(uint8_t* data, uint8_t len){  
+//     usb_bulk_write(MISHKADATA_EP, data, len, 100);
+// }
 
 
 
-struct MishkaGetData Panda::mishka_receive(){
+void Panda::mishka_receive(MishkaData *md){
 
-  struct MishkaGetData md;
-
-  //   struct __attribute__((packed)) timestamp_t {
-  //   uint16_t year; // Starts at 0
-  //   uint8_t month;
-  //   uint8_t day;
-  //   uint8_t weekday;
-  //   uint8_t hour;
-  //   uint8_t minute;
-  //   uint8_t second;
-  // } rtc_time = {0};
-
-  usb_read(0xb4, 0, 0, (unsigned char*)&md, sizeof(md));
-
-  return md;
-  // usb_bulk_read(MISHKADATA_EP, (uint8_t*)&md, sizeof(MishkaGetData), 100);
-  // return md;
+  usb_read(0xb4, 0, 0, (unsigned char*)md, sizeof(md));
 }

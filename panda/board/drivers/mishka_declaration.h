@@ -31,6 +31,13 @@ typedef struct{
 	uint8_t  flags;
 }Mishka;
 
+
+typedef struct{
+  uint8_t pressedButton;
+  bool activateOP;
+  uint32_t crc;
+}MishkaData;
+
 enum Flags {runMomentCalcFlag = 1};
 enum PidReset {normalPid, resetPid};
 
@@ -41,20 +48,26 @@ enum State {
 				lastState
 };
 
+enum Key			{noKey = 0, lkasOnKey, cancelKey, accOnKey, upKey, downKey};
+
 enum OPState {
 	opActive = 1, opLeftLine = 2, opRightLine = 4
 };
 
 Mishka mishka;
 
-
+#define BTN_ACC_LVL		736//675//750
+#define BTN_CANCEL_LVL	1364//1200//1400
+#define BTN_DOWN_LVL	2025 //1940//1600//2010
+#define BTN_UP_LVL		2482//2000//2570
+#define BTN_NOKEY_LVL	2980//2300
 
 #define CORRECT_POINT_NUM	5
 #define POINT_DATA_DIVIDER	10
 
 #define MAX_K_KF		32768
 
-#define KALMAN_SBI_KOEF 	32200
+#define KALMAN_SBI_KOEF 	32000
 #define KALMAN_SBI(z, x) ((KALMAN_SBI_KOEF*z+(MAX_K_KF-KALMAN_SBI_KOEF)*x)/MAX_K_KF)
 
 #define KALMAN_KOEF 1000
@@ -98,11 +111,20 @@ uint16_t pidNFData[] =  {70, 10,  0,  0, 0};  //in 1/10
 #define STEERING_WHEEL_MOMENT_ID	0x2f1 //C+D
 #define STEERING_WHEEL_POS_ID		0x236	//A+B
 #define SPEED_ID					0x214
+#define STEER_CONTROL_ID			0x3b6
 
 
 #define IS_BUT_PRESS	get_gpio_input(GPIOA, 10)
-#define FS_RELAY_ON		set_gpio_output(GPIOA, 9, true)
-#define FS_RELAY_OFF	set_gpio_output(GPIOA, 9, false)
+#define FS_RELAY_ON		set_gpio_output(GPIOA, 9, false)
+#define FS_RELAY_OFF	set_gpio_output(GPIOA, 9, true)
+
+#define GREEN_ON 			set_gpio_output(GPIOB, 14, true)
+#define GREEN_OFF 			set_gpio_output(GPIOB, 14, false)
+#define RED_ON 				set_gpio_output(GPIOB, 15, true)
+#define RED_OFF 			set_gpio_output(GPIOB, 15, false);
+//#define RED_TOGLE			(GPIOB->ODR ^= GPIO_ODR_12)
+
+#define OP_ACTIVE_TIMEOUT	20 //in ? sec
 
 //init code
 void mishka_init(void);

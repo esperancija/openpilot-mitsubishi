@@ -42,9 +42,11 @@ struct can_frame {
 	long src;
 };
 
-struct MishkaGetData{
-  uint16_t steerButtonAdc;
-};
+typedef struct{
+  uint8_t pressedButton;
+  bool activateOP;
+  uint32_t crc;  
+}MishkaData;
 
 class Panda {
  private:
@@ -96,8 +98,8 @@ class Panda {
   void set_data_speed_kbps(uint16_t bus, uint16_t speed);
   void can_send(capnp::List<cereal::CanData>::Reader can_data_list);
   bool can_receive(std::vector<can_frame>& out_vec);
-  void mishka_send(uint8_t* data, uint8_t len);
-  struct MishkaGetData mishka_receive();
+  //void mishka_send(uint8_t* data, uint8_t len);
+  void mishka_receive(MishkaData *md);  
 
 protected:
   // for unit tests

@@ -19,6 +19,8 @@
 #include <future>
 #include <thread>
 
+#include <cstring>
+
 #include <libusb-1.0/libusb.h>
 
 #include "cereal/gen/cpp/car.capnp.h"
@@ -609,20 +611,36 @@ void pigeon_thread(Panda *panda) {
   }
 }
 
-typedef struct{
-  int32_t steeringMoment;
-  bool steeringActive;
-  uint32_t crc;  
-}MishkaSendData;
+
+
+// static void pigeon_publish_raw(PubMaster &pm, const std::string &dat) {
+//   // create message
+//   MessageBuilder msg;
+//   msg.initEvent().setUbloxRaw(capnp::Data::Reader((uint8_t*)dat.data(), dat.length()));
+//   pm.send("ubloxRaw", msg);
+// }
+
+static void mishka_publish_data(PubMaster &pm, MishkaData data) {
+  // create message
+  MessageBuilder msg;
+  auto event = msg.initEvent();
+  auto getmishka = event.initGetmishka();  // This returns a MishkaGetData::Builder
+  getmishka.setPressedButton(data.pressedButton);
+  getmishka.setActivateOP(data.activateOP);
+  getmishka.setCrc(data.crc);
+  pm.send("getmishka", msg);
+}
 
 void mishka_thread(Panda *panda) {
   util::set_thread_name("boardd_mishka");
-  static MishkaSendData md;
+  static MishkaData getdata;
 
   AlignedBuffer aligned_buf;
   std::unique_ptr<Context> context(Context::create());
   std::unique_ptr<SubSocket> subscriber(SubSocket::create(context.get(), "sendmishka"));
   //std::unique_ptr<SubSocket> subscriber(SubSocket::create(context.get(), "sendcan"));
+
+  PubMaster pm({"getmishka"});
   
   assert(subscriber != NULL);
   subscriber->setTimeout(100);
@@ -630,6 +648,10 @@ void mishka_thread(Panda *panda) {
   // run as fast as messages come in
   while (!do_exit && panda->connected) {
     std::unique_ptr<Message> msg(subscriber->receive());
+
+    panda->mishka_receive(&getdata);
+    mishka_publish_data(pm, getdata);
+
     if (!msg) {
       if (errno == EINTR) {
         do_exit = true;
@@ -637,24 +659,23 @@ void mishka_thread(Panda *panda) {
       continue;
     }
 
-    LOGE("Got adc data %d", panda->mishka_receive().steerButtonAdc);
 
-    capnp::FlatArrayMessageReader cmsg(aligned_buf.align(msg.get()));
-    cereal::Event::Reader event = cmsg.getRoot<cereal::Event>();
-    //Dont send if older than 1 second
-    if ((nanos_since_boot() - event.getLogMonoTime() < 1e9)) {
-      auto mde = event.getSendmishka();      
-      LOGE("Got message to mishka %d %d %d", mde.getSteeringMoment(), mde.getSteeringActive(), mde.totalSize())
-      md.steeringMoment = mde.getSteeringMoment();
-      md.steeringActive = mde.getSteeringActive();
-      md.crc = 0x1983;
-      panda->mishka_send((uint8_t *)&md, sizeof(MishkaSendData));
-      // for (const auto& panda : pandas) {
-      //   LOGT("sending sendcan to panda: %s", (panda->usb_serial).c_str());
-      //   panda->can_send(event.getSendcan());
-      //   LOGT("sendcan sent to panda: %s", (panda->usb_serial).c_str());
-      // }
-    }
+    // capnp::FlatArrayMessageReader cmsg(aligned_buf.align(msg.get()));
+    // cereal::Event::Reader event = cmsg.getRoot<cereal::Event>();
+    // //Dont send if older than 1 second
+    // if ((nanos_since_boot() - event.getLogMonoTime() < 1e9)) {
+    //   auto mde = event.getSendmishka();      
+    //   LOGE("Got message to mishka %d %d %d", mde.getSteeringMoment(), mde.getSteeringActive(), mde.totalSize())
+    //   md.steeringMoment = mde.getSteeringMoment();
+    //   md.steeringActive = mde.getSteeringActive();
+    //   md.crc = 0x1983;
+    //   panda->mishka_send((uint8_t *)&md, sizeof(MishkaSendData));
+    //   // for (const auto& panda : pandas) {
+    //   //   LOGT("sending sendcan to panda: %s", (panda->usb_serial).c_str());
+    //   //   panda->can_send(event.getSendcan());
+    //   //   LOGT("sendcan sent to panda: %s", (panda->usb_serial).c_str());
+    //   // }
+    // }
   }
 }
 

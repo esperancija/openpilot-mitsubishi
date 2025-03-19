@@ -48,11 +48,8 @@ class CarController():
 
     can_sends = []
 
-    if self.pm is None:
-      self.pm = messaging.PubMaster(['sendmishka'])
-
     if self.sm is None:
-       self.sm = messaging.SubMaster(['liveParameters','carState']) #sm['carState'].yawRate
+       self.sm = messaging.SubMaster(['liveParameters','carState', 'getmishka']) #sm['carState'].yawRate
     else:
       self.sm.update(0)
 
@@ -61,6 +58,11 @@ class CarController():
     steerRatio = int(round(self.sm['liveParameters'].steerRatio * 10))
     #steerRatio = int(actuators.accel)
 
+    pressedButton = self.sm['getmishka'].pressedButton
+    activateOP = self.sm['getmishka'].activateOP
+
+    print("pressedButton=%d, activateOP=%d" % (pressedButton, activateOP))
+    
     #stiff = int(round(self.sm['liveParameters'].stiffnessFactor  * 100))
     #stiff = int(round(self.sm['liveParameters'].roll * 10))
 
@@ -83,24 +85,6 @@ class CarController():
                         int(enabled), int(left_line), int(right_line), int(lead), steerRatio, sad, angleOffset, frame)
  
     can_sends.append(new_msg)
-
-
-    # # carState
-    # car_events = self.events.to_msg()
-    # cs_send = messaging.new_message('carState')
-    # cs_send.valid = CS.canValid
-    # cs_send.carState = CS
-    # cs_send.carState.events = car_events
-    # self.pm.send('carState', cs_send)
-
-    mishkaMsg = messaging.new_message('sendmishka')
-    #mishkaData = mishkaMsg.sendmishka
-    mishkaMsg.sendmishka.steeringMoment = frame
-    mishkaMsg.sendmishka.steeringActive = enabled
-    
-    #dat.steeringAngleDeg = steeringAngleDeg No response from ublox
-    self.pm.send('sendmishka', mishkaMsg) # to_bytes
-
 
     self.apply_steer_last = apply_steer
     #can_sends.append((0x18DAB0F1, 0, b"\x02\x3E\x80\x00\x00\x00\x00\x00", 0))
