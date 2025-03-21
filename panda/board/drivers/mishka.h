@@ -202,6 +202,9 @@ static int16_t oldVal1, oldVal2;
 
     // Check for transfer complete interrupt
     if (DMA2->LISR & DMA_LISR_TCIF0){
+
+    	set_gpio_output(GPIOB, 4, true);
+
     	for(i=0;i<6;i++){
     		ssSum[0] += mishka.rawAdcData[3+i];
     		ssSum[1] += mishka.rawAdcData[10+i];
@@ -239,6 +242,8 @@ static int16_t oldVal1, oldVal2;
 
 			RED_ON;
 		}
+
+		set_gpio_output(GPIOB, 4, false);
 
         DMA2->LIFCR |= DMA_LIFCR_CTCIF0;  // Clear transfer complete flag
     }
