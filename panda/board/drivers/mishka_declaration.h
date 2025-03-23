@@ -17,7 +17,8 @@ typedef struct{
 	int16_t 	steerPosition;          //from CAN
 	int16_t 	steerMoment;            //from CAN
 
-	int16_t 	steerTargetAngle;       //calculate needed angle
+	int16_t 	steerTargetAngle;      //calculate needed angle
+	int16_t 	steerTestAngle;       //calculate needed angle
 	uint16_t 	steerTargetTime;       //in read ldw data period 1/10s
 	int16_t 	steerTargetMoment; 		//
 	int16_t 	steerWheelMoment;       //
@@ -38,17 +39,18 @@ typedef struct{
   uint32_t crc;
 }MishkaData;
 
-enum Flags {runMomentCalcFlag = 1};
+enum Flags {runMomentCalcFlag = 1, callTimeOutFlag = 2};
 enum PidReset {normalPid, resetPid};
 
 enum State {
 	offState, 		//no control
 	activeState, 	//steer shake by ldw warning
 	controlState, 	//steer control by external data
+	testState,
 				lastState
 };
 
-enum Key			{noKey = 0, lkasOnKey, cancelKey, accOnKey, upKey, downKey};
+enum Key {noKey = 0, lkasOnKey, cancelKey, accOnKey, upKey, downKey};
 
 enum OPState {
 	opActive = 1, opLeftLine = 2, opRightLine = 4
@@ -67,7 +69,7 @@ Mishka mishka;
 
 #define MAX_K_KF		32768
 
-#define KALMAN_SBI_KOEF 	32000
+#define KALMAN_SBI_KOEF 	30000
 #define KALMAN_SBI(z, x) ((KALMAN_SBI_KOEF*z+(MAX_K_KF-KALMAN_SBI_KOEF)*x)/MAX_K_KF)
 
 #define KALMAN_KOEF 1000
@@ -104,8 +106,8 @@ uint16_t pidNFData[] =  {70, 10,  0,  0, 0};  //in 1/10
 #define MOMENT_ADD				(350 + mishka.speed/50)
 
 #define DIFF_AVRG	3
-#define TENZO1_ADC_CH	1
-#define TENZO2_ADC_CH	6
+#define TENZO1_ADC_CH	6 //1
+#define TENZO2_ADC_CH	1 //6
 #define SBI_ADC_CH		7
 
 #define STEERING_WHEEL_MOMENT_ID	0x2f1 //C+D
@@ -117,6 +119,16 @@ uint16_t pidNFData[] =  {70, 10,  0,  0, 0};  //in 1/10
 #define IS_BUT_PRESS	!get_gpio_input(GPIOA, 10)
 #define FS_RELAY_ON		set_gpio_output(GPIOA, 9, false)
 #define FS_RELAY_OFF	set_gpio_output(GPIOA, 9, true)
+/*
+//#define FS_RELAY_SETUP 	do {GPIOA->MODER &= ~GPIO_MODER_MODER9;\
+//									GPIOA->MODER |= GPIO_MODER_MODER9_0;} while (0)
+//#define FS_RELAY_ON		do {GPIOA->MODER &= ~GPIO_MODER_MODER9;\
+//								GPIOA->MODER |= GPIO_MODER_MODER9_0;\
+//								GPIOA->BSRR = GPIO_BSRR_BS_9;} while (0)
+//#define FS_RELAY_OFF		(GPIOA->MODER &= ~GPIO_MODER_MODER9)
+ * */
+
+#define FS_RELAY_STATE		(GPIOA->IDR & GPIO_IDR_IDR_9)
 
 #define GREEN_ON 			set_gpio_output(GPIOB, 14, true)
 #define GREEN_OFF 			set_gpio_output(GPIOB, 14, false)

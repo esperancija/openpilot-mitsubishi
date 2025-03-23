@@ -97,6 +97,7 @@ prevMoment = res;
 return res;
 }
 
+//call every speed packet ~100Hz
 void doSteerControl(void){
 
 static int16_t newMoment, prevSetAngle;
@@ -146,16 +147,20 @@ static uint32_t cnt;
 #else
 		if ((IS_BUT_PRESS) || (mishka.opData & opActive)){
 #endif
-			mishka.currentState = controlState;
+			if (mishka.currentState != testState)
+				mishka.currentState = controlState;
 			FS_RELAY_ON;
 		}else{
 			mishka.currentState = activeState;
 		}
 
-		if ((mishka.currentState == controlState) &&
-				((mishka.speed > 700) || (IS_BUT_PRESS))){
+		if (((mishka.currentState == controlState) || (mishka.currentState == testState)) &&
+				((mishka.speed > 700) || (IS_BUT_PRESS)) ){
 
-			newMoment = makePID((mishka.steerPosition - ((mishka.steerTargetAngle+prevSetAngle)/2)), normalPid);
+			if (mishka.currentState == testState)
+				newMoment = makePID((mishka.steerPosition - (mishka.steerTestAngle)), normalPid);
+			else
+				newMoment = makePID((mishka.steerPosition - ((mishka.steerTargetAngle+prevSetAngle)/2)), normalPid);
 
 			if (PID_NF){
 				int16_t tempMom = correctMoment(PID_NF, mishka.steerPosition/2, pidNFAngle, pidNFData)*
@@ -175,7 +180,8 @@ static uint32_t cnt;
 
 		}else{
 			makePID(0, resetPid);//reset internal variables
-			mishka.steerTargetMoment = 0;
+			if (mishka.currentState != testState)
+				mishka.steerTargetMoment = 0;
 		}
 }
 
@@ -205,6 +211,7 @@ static int16_t oldVal1, oldVal2;
 
     	set_gpio_output(GPIOB, 4, true);
 
+    	//skip first measure
     	for(i=0;i<6;i++){
     		ssSum[0] += mishka.rawAdcData[3+i];
     		ssSum[1] += mishka.rawAdcData[10+i];
@@ -217,15 +224,15 @@ static int16_t oldVal1, oldVal2;
 
 
 	/*******************************************************************************************/
-		if ((mishka.currentState == controlState)){
+		if ((mishka.currentState == controlState) || (mishka.currentState == testState)){
 			momentAdd = mishka.steerTargetMoment;
 		}else if (mishka.currentState == offState)
 			momentAdd = 0;
 
 		limitMoment(momentAdd, MAX_MOMENT);
 
-		value1 = mishka.steerSensor1+momentAdd;
-		value2 = mishka.steerSensor2-momentAdd;
+		value2 = mishka.steerSensor1+momentAdd;
+		value1 = mishka.steerSensor2-momentAdd;
 
 	#define MAX_ALOW_MOMENT	4093	//must be lower than 4096
 		//check overflow
@@ -237,8 +244,8 @@ static int16_t oldVal1, oldVal2;
 			oldVal1 = value1;
 			oldVal2 = value2;
 		}else{
-			DAC->DHR12R1 = oldVal1;//murchik.steerSensor1;
-			DAC->DHR12R2 = oldVal2;//murchik.steerSensor2;
+			DAC->DHR12R1 = oldVal1; //oldVal1;//murchik.steerSensor1;
+			DAC->DHR12R2 = oldVal2; //oldVal2;//murchik.steerSensor2;
 
 			RED_ON;
 		}
@@ -249,6 +256,7 @@ static int16_t oldVal1, oldVal2;
     }
 }
 
+#define CALL_TIMEOUT	125
 void TIM3_IRQh(void){
 
 static uint32_t i;
@@ -259,10 +267,16 @@ static uint32_t i;
 			puts("ADC_OVR");
 		}
 
-		if ((mishka.flags & runMomentCalcFlag) || ((i%125) == 0)){
+		if ((mishka.flags & runMomentCalcFlag) || ((i%CALL_TIMEOUT) == 0)){
 			set_gpio_output(GPIOC, 12, true);
 			doSteerControl();
 			mishka.flags &= ~runMomentCalcFlag;
+
+			if (i >= CALL_TIMEOUT)
+				mishka.flags |= callTimeOutFlag;
+			else
+				mishka.flags &= ~callTimeOutFlag;
+
 			i = 0;
 		}
 		set_gpio_output(GPIOC, 12, false);
@@ -276,12 +290,15 @@ static uint32_t i;
 
 void mishka_init(void){
 
-	 set_gpio_mode(GPIOA, TENZO1_ADC_CH, MODE_ANALOG);
-	 set_gpio_mode(GPIOA, TENZO2_ADC_CH, MODE_ANALOG);
-	 set_gpio_mode(GPIOA, SBI_ADC_CH, MODE_ANALOG);
+	//FS_RELAY_SETUP;
+	//FS_RELAY_OFF;
 
-	 //init DAC
-	 register_set(&(DAC->CR), DAC_CR_EN1 | DAC_CR_EN2, 0x3FFF3FFFU);
+	set_gpio_mode(GPIOA, TENZO1_ADC_CH, MODE_ANALOG);
+	set_gpio_mode(GPIOA, TENZO2_ADC_CH, MODE_ANALOG);
+	set_gpio_mode(GPIOA, SBI_ADC_CH, MODE_ANALOG);
+
+	//init DAC
+	register_set(&(DAC->CR), DAC_CR_EN1 | DAC_CR_EN2, 0x3FFF3FFFU);
 
     register_set(&(ADC1->CR1), ADC_CR1_SCAN | ADC_CR1_EOCIE,
     									ADC_CR1_SCAN | ADC_CR1_EOCIE);
@@ -402,6 +419,18 @@ uint8_t getAccKey(void){
 		return lkasOnKey;
 }
 
+const char* keyToString(uint8_t key) {
+    switch(key) {
+        case noKey:      return "noKey";
+        case lkasOnKey:  return "lkasOnKey";
+        case cancelKey:  return "cancelKey";
+        case accOnKey:   return "accOnKey";
+        case upKey:      return "upKey";
+        case downKey:    return "downKey";
+        default:         return "unknown";
+    }
+}
+
 static uint32_t statusCnt;
 static uint8_t onState;
 static uint8_t oldSteerKey;
@@ -413,21 +442,53 @@ void mishka_tick(void){
 static uint32_t i;
 
 	steerKey = getAccKey();
-	if (((steerKey == lkasOnKey)) && (oldSteerKey == noKey)){
-		onState ^= 1;
-		statusCnt = 0;
+	if (steerKey != oldSteerKey){
+		switch (oldSteerKey){
+			case cancelKey:
+				if (mishka.currentState == testState)
+					mishka.steerTestAngle = 0;
+				else if ((IS_BUT_PRESS) && (bntPressCnt > 25))
+					mishka.currentState = testState;
+				break;
+			case accOnKey:
+				if (mishka.currentState == testState)
+					mishka.currentState = controlState;
+				break;
+			case upKey:
+				if (mishka.currentState == testState)
+					mishka.steerTestAngle += 20; //10 degree
+				break;
+			case downKey:
+				if (mishka.currentState == testState)
+					mishka.steerTestAngle -= 20; //10 degree
+				break;
+			case lkasOnKey:
+				onState ^= 1;
+				statusCnt = 0;
+				break;
+		}
 	}
+//	if (((steerKey == lkasOnKey)) && (oldSteerKey == noKey)){
+//		onState ^= 1;
+//		statusCnt = 0;
+//	}
 
 //	if ((statusCnt > 5) && (onState) && ((mishka.currentState != controlState)) && (!(IS_BUT_PRESS))){ //500 ms
 //		onState = 0;
 //	}
 
-	if (mishka.currentState == controlState){
-	//if (onState){
+//set led state
+	if ((mishka.currentState == controlState) || ((mishka.currentState == testState) && (i%2))){
 		GREEN_ON;
 	}else{
 		GREEN_OFF;
 	}
+
+	if (!(FS_RELAY_STATE))
+		RED_ON;
+	else
+		RED_OFF;
+
 
 	if (steerKey){
 		bntPressCnt++;
@@ -442,10 +503,11 @@ static uint32_t i;
 		puts("\n\r");
 		//puth(mishka.steerPosition); puts(" ");puth(mishka.steerTargetAngle);
 		puts("steerTargetMoment=");puth(mishka.steerTargetMoment);puts("\n\r");
-		puts("steerTargetAngle=");puth(mishka.steerTargetAngle);puts("\n\r");
+		puts("steerTargetAngle=");puth(mishka.steerTargetAngle); puts(" "); puth(mishka.steerTestAngle);puts("\n\r");
 		puts("steerPosition=");puth(mishka.steerPosition);puts("\n\r");
 		puts("speed=");puth(mishka.speed);puts("\n\r");
-		puts("currentState=");puth(mishka.currentState);puts("\n\r");
+		puts("currentState=");puth(mishka.currentState);puts(" "); puth(onState); puts("\n\r");
+		puts("button=");puts(keyToString(steerKey));puth(bntPressCnt);puts("\n\r");
 		puts("\n\r");
 	//	puth(steerKey); puts(" "); puth(mishka.opData);
 	//	puts("\n\r");
@@ -481,18 +543,6 @@ static uint32_t i;
 
 i++;
 }
-
-//usb got data from EP4 use MishkaSendData struct
-void mishka_usb_get(uint8_t * data, uint8_t len){
-
-	UNUSED(len);
-	UNUSED(data);
-//	if (data[4])
-//		set_gpio_output(GPIOA, 9, true);
-//	else
-//		set_gpio_output(GPIOA, 9, false);
-}
-
 
 //send data to comma use MishkaGetData struct
 int mishka_usb_send(void *data){
