@@ -24,11 +24,9 @@ int16_t correctMoment(int16_t m, int16_t angle, uint16_t* x, uint16_t* y){
 
 		return m*(y[i]+(x[i] - angle)*(y[i-1] - y[i])/(x[i]-x[i-1]))/POINT_DATA_DIVIDER;
 	}
-	return m;
 }
 
-
-int16_t abs(int16_t d){
+int16_t get_abs(int16_t d){
 	if (d < 0)
 		return -d;
 	else
@@ -54,7 +52,7 @@ for (i=0;i<DIFF_AVRG;i++)
 	diff += diffArr[i];
 diff /= DIFF_AVRG;
 
-if (abs(mishka.steerWheelMoment) < PID_I_DROP_ADD)
+if (get_abs(mishka.steerWheelMoment) < PID_I_DROP_ADD)
 	sum += diff;
 
 //limit sum
@@ -79,7 +77,7 @@ for (i=0;i<D_SMOOTH;i++)
 res = P+I+D/D_SMOOTH;
 
 //limit moment change
-if (abs(res - prevMoment) > mDiffLimit){
+if (get_abs(res - prevMoment) > mDiffLimit){
 	if ((res - prevMoment) > 0)
 		res = prevMoment + mDiffLimit;
 	else
@@ -229,7 +227,7 @@ static int16_t oldVal1, oldVal2;
 		}else if (mishka.currentState == offState)
 			momentAdd = 0;
 
-		limitMoment(momentAdd, MAX_MOMENT);
+		momentAdd = limitMoment(momentAdd, MAX_MOMENT);
 
 		value2 = mishka.steerSensor1+momentAdd;
 		value1 = mishka.steerSensor2-momentAdd;
@@ -290,8 +288,12 @@ static uint32_t i;
 
 void mishka_init(void){
 
-	//FS_RELAY_SETUP;
-	//FS_RELAY_OFF;
+	FS_RELAY_OFF;
+
+	set_gpio_mode(GPIOB, 4, MODE_OUTPUT);
+
+	  //set_gpio_mode(GPIOB, 4, MODE_OUTPUT);
+	  //GPIOB->ODR ^= GPIO_ODR_ODR_4;
 
 	set_gpio_mode(GPIOA, TENZO1_ADC_CH, MODE_ANALOG);
 	set_gpio_mode(GPIOA, TENZO2_ADC_CH, MODE_ANALOG);
@@ -300,6 +302,7 @@ void mishka_init(void){
 	//init DAC
 	register_set(&(DAC->CR), DAC_CR_EN1 | DAC_CR_EN2, 0x3FFF3FFFU);
 
+	//init ADC
     register_set(&(ADC1->CR1), ADC_CR1_SCAN | ADC_CR1_EOCIE,
     									ADC_CR1_SCAN | ADC_CR1_EOCIE);
 
@@ -456,11 +459,11 @@ static uint32_t i;
 				break;
 			case upKey:
 				if (mishka.currentState == testState)
-					mishka.steerTestAngle += 20; //10 degree
+					mishka.steerTestAngle += 30; //15 degree
 				break;
 			case downKey:
 				if (mishka.currentState == testState)
-					mishka.steerTestAngle -= 20; //10 degree
+					mishka.steerTestAngle -= 30; //15 degree
 				break;
 			case lkasOnKey:
 				onState ^= 1;
@@ -507,7 +510,7 @@ static uint32_t i;
 		puts("steerPosition=");puth(mishka.steerPosition);puts("\n\r");
 		puts("speed=");puth(mishka.speed);puts("\n\r");
 		puts("currentState=");puth(mishka.currentState);puts(" "); puth(onState); puts("\n\r");
-		puts("button=");puts(keyToString(steerKey));puth(bntPressCnt);puts("\n\r");
+		//puts("button=");puth(FS_RELAY_STATE);//  puts(keyToString(steerKey));puth(bntPressCnt);puts("\n\r");
 		puts("\n\r");
 	//	puth(steerKey); puts(" "); puth(mishka.opData);
 	//	puts("\n\r");

@@ -118,7 +118,9 @@ uint16_t pidNFData[] =  {70, 10,  0,  0, 0};  //in 1/10
 
 #define IS_BUT_PRESS	!get_gpio_input(GPIOA, 10)
 #define FS_RELAY_ON		set_gpio_output(GPIOA, 9, false)
-#define FS_RELAY_OFF	set_gpio_output(GPIOA, 9, true)
+#define FS_RELAY_OFF	set_gpio_mode(GPIOA, 9, MODE_INPUT); //set_gpio_output(GPIOA, 9, true)
+#define FS_RELAY_STATE	get_gpio_input(GPIOA, 9)//	(GPIOA->IDR & GPIO_IDR_IDR_9)
+
 /*
 //#define FS_RELAY_SETUP 	do {GPIOA->MODER &= ~GPIO_MODER_MODER9;\
 //									GPIOA->MODER |= GPIO_MODER_MODER9_0;} while (0)
@@ -128,13 +130,11 @@ uint16_t pidNFData[] =  {70, 10,  0,  0, 0};  //in 1/10
 //#define FS_RELAY_OFF		(GPIOA->MODER &= ~GPIO_MODER_MODER9)
  * */
 
-#define FS_RELAY_STATE		(GPIOA->IDR & GPIO_IDR_IDR_9)
 
 #define GREEN_ON 			set_gpio_output(GPIOB, 14, true)
 #define GREEN_OFF 			set_gpio_output(GPIOB, 14, false)
 #define RED_ON 				set_gpio_output(GPIOB, 15, true)
 #define RED_OFF 			set_gpio_output(GPIOB, 15, false);
-//#define RED_TOGLE			(GPIOB->ODR ^= GPIO_ODR_12)
 
 #define OP_ACTIVE_TIMEOUT	20 //in ? sec
 

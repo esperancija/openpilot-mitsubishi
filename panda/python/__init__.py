@@ -285,7 +285,7 @@ class Panda(object):
 
     # erase sectors 1 through 3
     print("flash: erasing")
-    for i in range(1, 4):
+    for i in range(1, 5):
       handle.controlWrite(Panda.REQUEST_IN, 0xb2, i, 0, b'')
 
     # flash over EP2

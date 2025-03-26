@@ -332,11 +332,6 @@ int main(void) {
   peripherals_init();
 
   gpio_usart2_init();
-  set_gpio_mode(GPIOB, 4, MODE_OUTPUT);
-
-
-  //set_gpio_mode(GPIOB, 4, MODE_OUTPUT);
-  //GPIOB->ODR ^= GPIO_ODR_ODR_4;
 
   detect_external_debug_serial();
   has_external_debug_serial = 1;

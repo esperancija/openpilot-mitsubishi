@@ -67,6 +67,7 @@ int main(void) {
     goto good;
   }
 
+
   // allow debug if built from source
 #ifdef ALLOW_DEBUG
   if (RSA_verify(&debug_rsa_key, ((void*)&_app_start[0]) + len, RSANUMBYTES, digest, SHA_DIGEST_SIZE)) {
