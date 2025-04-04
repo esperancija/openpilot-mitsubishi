@@ -29,5 +29,5 @@ if __name__ == "__main__":
   sendcan = messaging.pub_sock('sendcan')
   logcan = messaging.sub_sock('can')
   time.sleep(1)
-  addr, vin = get_vin(logcan, sendcan, 1, debug=False)
+  addr, vin = get_vin(logcan, sendcan, 2, debug=False)
   print(hex(addr), vin)

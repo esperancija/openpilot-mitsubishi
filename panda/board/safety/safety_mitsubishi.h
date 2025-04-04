@@ -1,6 +1,7 @@
 // global torque limit
 const int MITSUBISHI_MAX_TORQUE = 1500;       // max torque cmd allowed ever
 
+
 // rate based torque limit + stay within actually applied
 // packet is sent at 100hz, so this limit is 1000/sec
 const int MITSUBISHI_MAX_RATE_UP = 10;        // ramp up slow
@@ -112,7 +113,7 @@ static int mitsubishi_fwd_hook(int bus_num, CANPacket_t *to_fwd) {
   UNUSED(to_fwd);
   UNUSED(bus_num);
 
-  return 0;
+  return -1;
 }
 
 const safety_hooks mitsubishi_hooks = {
