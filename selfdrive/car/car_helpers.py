@@ -159,6 +159,7 @@ def fingerprint(logcan, sendcan):
 
     frame += 1
 
+  car_fingerprint = candidate_cars[1][candidate_cars[1].index('OUTLANDER_GT_2016')]
   exact_match = True
   source = car.CarParams.FingerprintSource.can
 

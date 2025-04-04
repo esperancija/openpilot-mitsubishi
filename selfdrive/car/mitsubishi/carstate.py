@@ -154,8 +154,8 @@ class CarState(CarStateBase):
       ("CRUISE_ON", "ACC_STATUS", 0),
       ("CRUISE_ACTIVE", "ACC_STATUS", 0),
       ("SET_SPEED", "ACC_STATUS", 0),
-      ("LEFT_WARNING", "BSW_STATUS", 0),
-      ("RIGHT_WARNING", "BSW_STATUS", 0),
+ #     ("LEFT_WARNING", "BSW_STATUS", 0),
+ #     ("RIGHT_WARNING", "BSW_STATUS", 0),
 
   #    ("TEST_DATA", "JOYSTICK_COMMAND", 0),
       ("OP_ON", "JOYSTICK_COMMAND", 0),
@@ -177,7 +177,7 @@ class CarState(CarStateBase):
       ("WARNING_SIGNALS", 1),
       ("STEER_MOMENT_SENSOR", 1),
       ("ACC_STATUS", 1),
-      ("BSW_STATUS", 1),
+#      ("BSW_STATUS", 1),
       ("JOYSTICK_COMMAND", 1),
     ]
     return CANParser(DBC[CP.carFingerprint]["pt"], signals, checks, 0)
