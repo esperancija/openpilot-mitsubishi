@@ -471,14 +471,10 @@ static uint32_t i;
 				break;
 		}
 	}
-//	if (((steerKey == lkasOnKey)) && (oldSteerKey == noKey)){
-//		onState ^= 1;
-//		statusCnt = 0;
-//	}
 
-//	if ((statusCnt > 5) && (onState) && ((mishka.currentState != controlState)) && (!(IS_BUT_PRESS))){ //500 ms
-//		onState = 0;
-//	}
+	if ((statusCnt > 5) && (onState) && ((mishka.currentState != controlState)) && (!(IS_BUT_PRESS))){ //500 ms
+		onState = 0;
+	}
 
 //set led state
 	if ((mishka.currentState == controlState) || ((mishka.currentState == testState) && (i%2))){
