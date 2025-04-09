@@ -34,7 +34,7 @@ class CarState(CarStateBase):
     return ret
 
   def swapBytesUnsigned(self, data):
-    return ((data & 0xff) << 8) + ((data >> 8)  & 0xff)
+    return ((data & 0x0f) << 8) + ((data >> 8)  & 0xff)
 
   def update(self, cp, cp_cam):
     ret = car.CarState.new_message()
