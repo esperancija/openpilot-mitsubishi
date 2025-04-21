@@ -44,5 +44,6 @@ uint32_t adc_get_voltage(void) {
   // s = 1000/((65535/3.3)*(1/11)) = 0.553902494
 
   // Avoid needing floating point math, so output in mV
-  return (adc_get(ADCCHAN_VOLTAGE) * 5539U) / 10000U;
+  //return (adc_get(ADCCHAN_VOLTAGE) * 5539U) / 10000U;
+  return 12000;
 }
