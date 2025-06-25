@@ -506,7 +506,7 @@ static uint32_t i;
 		puts("steerPosition=");puth(mishka.steerPosition);puts("\n\r");
 		puts("speed=");puth(mishka.speed);puts("\n\r");
 		puts("currentState=");puth(mishka.currentState);puts(" "); puth(onState); puts("\n\r");
-		//puts("button=");puth(FS_RELAY_STATE);//  puts(keyToString(steerKey));puth(bntPressCnt);puts("\n\r");
+		puts("button="); puts(keyToString(steerKey));puth(bntPressCnt);puts("\n\r");
 		puts("\n\r");
 	//	puth(steerKey); puts(" "); puth(mishka.opData);
 	//	puts("\n\r");

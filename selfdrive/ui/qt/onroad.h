@@ -10,6 +10,8 @@
 
 // ***** onroad widgets *****
 
+class LiveInfoWindow;          // forward declaration is enough
+
 class OnroadHud : public QWidget {
   Q_OBJECT
   Q_PROPERTY(QString speed MEMBER speed NOTIFY valueChanged);

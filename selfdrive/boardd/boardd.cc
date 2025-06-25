@@ -652,6 +652,8 @@ void mishka_thread(Panda *panda) {
     panda->mishka_receive(&getdata);
     mishka_publish_data(pm, getdata);
 
+    util::sleep_for(50);  //in ms
+
     if (!msg) {
       if (errno == EINTR) {
         do_exit = true;

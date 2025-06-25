@@ -4,12 +4,16 @@
 
 #include <QDebug>
 
+#include "selfdrive/ui/qt/liveinfowindow.h"
+
 #include "selfdrive/common/timing.h"
 #include "selfdrive/ui/qt/util.h"
 #ifdef ENABLE_MAPS
 #include "selfdrive/ui/qt/maps/map.h"
 #include "selfdrive/ui/qt/maps/map_helpers.h"
 #endif
+
+LiveInfoWindow *info = nullptr;
 
 OnroadWindow::OnroadWindow(QWidget *parent) : QWidget(parent) {
   QVBoxLayout *main_layout  = new QVBoxLayout(this);
@@ -30,6 +34,13 @@ OnroadWindow::OnroadWindow(QWidget *parent) : QWidget(parent) {
   split->setContentsMargins(0, 0, 0, 0);
   split->setSpacing(0);
   split->addLayout(road_view_layout);
+
+  info = new LiveInfoWindow(this);
+  stacked_layout->addWidget(info);   // кладём туда же, где alerts
+  info->raise();                     // на самый верх
+
+  QObject::connect(uiState(), &UIState::uiUpdate,
+                 info,     &LiveInfoWindow::updateState);
 
   stacked_layout->addWidget(split_wrapper);
 
