@@ -45,6 +45,7 @@ struct can_frame {
 typedef struct{
   uint8_t pressedButton;
   bool activateOP;
+  uint8_t btnPressCnt; //count of button press
   uint32_t crc;  
 }MishkaData;
 

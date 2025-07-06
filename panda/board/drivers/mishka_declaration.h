@@ -34,8 +34,9 @@ typedef struct{
 
 
 typedef struct{
-  uint8_t pressedButton;
-  bool activateOP;
+  uint8_t pressedButton; //button pressed
+  bool activateOP; //
+  uint8_t btnPressCnt; //count of button press
   uint32_t crc;
 }MishkaData;
 
@@ -69,7 +70,7 @@ Mishka mishka;
 
 #define MAX_K_KF		32768
 
-#define KALMAN_SBI_KOEF 	30000
+#define KALMAN_SBI_KOEF 	25000//30000
 #define KALMAN_SBI(z, x) ((KALMAN_SBI_KOEF*z+(MAX_K_KF-KALMAN_SBI_KOEF)*x)/MAX_K_KF)
 
 #define KALMAN_KOEF 1000

@@ -69,6 +69,7 @@ void OnroadWindow::updateState(const UIState &s) {
   }
 
   hud->updateState(s);
+  info->updateState(s);    // <<< добавили одну строку
 
   if (bg != bgColor) {
     // repaint border

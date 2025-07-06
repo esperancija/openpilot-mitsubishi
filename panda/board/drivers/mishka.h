@@ -546,8 +546,8 @@ i++;
 //send data to comma use MishkaGetData struct
 int mishka_usb_send(void *data){
 
-	MishkaData md = {.pressedButton = steerKey, .activateOP = onState, .crc = 0x1983};
+	MishkaData md = {.pressedButton = steerKey, .btnPressCnt = bntPressCnt, .activateOP = onState, .crc = 0x1983};
 	(void)memcpy(data, &md, sizeof(MishkaData));
   //(uint16_t*)data[0] = rawAdcData[0];
-  return 2;
+  return 5;
 }

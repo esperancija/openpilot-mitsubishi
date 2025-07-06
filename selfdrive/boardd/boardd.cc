@@ -626,6 +626,7 @@ static void mishka_publish_data(PubMaster &pm, MishkaData data) {
   auto event = msg.initEvent();
   auto getmishka = event.initGetmishka();  // This returns a MishkaGetData::Builder
   getmishka.setPressedButton(data.pressedButton);
+  getmishka.setBtnPressCnt(data.btnPressCnt);
   getmishka.setActivateOP(data.activateOP);
   getmishka.setCrc(data.crc);
   pm.send("getmishka", msg);
