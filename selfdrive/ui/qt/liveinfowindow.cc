@@ -12,8 +12,9 @@ LiveInfoWindow::LiveInfoWindow(QWidget *parent) : QWidget(parent) {
 
 void LiveInfoWindow::updateState(const UIState &s) {
 
-   static int oldSteerRatio;
+  static int oldSteerRatio;
   static int  oldSteerActuatorDelay;
+  static int i = 0;
 
   const auto gm = (*s.sm)["getmishka"].getGetmishka();
   lastBtn = gm.getPressedButton(); 
@@ -40,9 +41,11 @@ void LiveInfoWindow::updateState(const UIState &s) {
   // if ((oldSteerRatio != steerRatio) || (oldSteerActuatorDelay != steerActuatorDelay)) {
   //   update();
   // }
-  //update();                       // перерисовать
-
-  oldSteerRatio = steerRatio;
+  if (i%10 == 0){
+    update();                       // перерисовать
+  }
+  i++;
+    oldSteerRatio = steerRatio;
   oldSteerActuatorDelay = steerActuatorDelay;
 }
 
@@ -64,11 +67,33 @@ void LiveInfoWindow::paintEvent(QPaintEvent *) {
   int x = width()  - p.fontMetrics().horizontalAdvance(sadStr) - margin;
   int y = margin + lineH;
 
-  if ((oldButton != lastBtn) && (oldButton == cancelKey) && (btnPressCnt > 50)){
-    state++;
-  }
-  if (state >= lastState )
-    state = normalState;
+  // if ((oldButton != lastBtn)){
+  //   switch (oldButton){
+  //     case cancelKey:
+  //       if (((state == normalState) && (btnPressCnt > 24)) || 
+  //           ((state == sadChangeState) && (btnPressCnt > 0)) || 
+  //              ((state == srChangeState) && (btnPressCnt > 0))){
+  //         state++;
+  //       }
+  //     case lkasOnKey:
+  //     case accOnKey:
+  //       state = normalState;
+  //       break;
+  //     case upKey:
+  //       if (state == sadChangeState){
+
+  //       }
+  //       break;
+  //     case downKey:
+  //        if (state == srChangeState){
+          
+  //       }
+  //       break;
+  //     default:
+  //   }
+  // }
+  // if (state >= lastState )
+  //   state = sadChangeState;
 
   // лёгкая тень
   p.setPen(QColor(0,0,0,160));
@@ -77,8 +102,8 @@ void LiveInfoWindow::paintEvent(QPaintEvent *) {
   //p.drawText(x+2, y+2+lineH, battStr);
 
   // основной белый текст
-  //p.setPen(Qt::white);
-  if ((lastBtn == cancelKey) && (btnPressCnt > 50))
+  p.setPen(Qt::white);
+  if ((lastBtn == cancelKey) && (btnPressCnt > 24))
     p.setPen(Qt::green);
   else if (state == sadChangeState)
     p.setPen(Qt::red);
