@@ -153,13 +153,34 @@ uint16_t pidNFData[] =  {70, 10,  0,  0, 0};  //in 1/10
 //#define FS_RELAY_OFF		(GPIOA->MODER &= ~GPIO_MODER_MODER9)
  * */
 
-
 #define GREEN_ON 			set_gpio_output(GPIOB, 14, true)
 #define GREEN_OFF 			set_gpio_output(GPIOB, 14, false)
 #define RED_ON 				set_gpio_output(GPIOB, 15, true)
 #define RED_OFF 			set_gpio_output(GPIOB, 15, false);
 
 #define OP_ACTIVE_TIMEOUT	20 //in ? sec
+
+
+//flash module definitions
+#define FLASH_KEY1               ((uint32_t)0x45670123)
+#define FLASH_KEY2               ((uint32_t)0xCDEF89AB)
+
+#define PAGE_SIZE		0x20000 //2048
+#define MAX_PAGE_NUMBER 8//12 //because of 128k page size (1.5M chip)
+
+#define COL_END "\033[0m"
+#define COL_RED "\033[31;1m"
+#define COL_GREEN "\033[32;1m"
+#define COL_YELLOW "\033[33;1m"
+#define COL_BLUE "\033[34;1m"
+#define COL_MAG "\033[35;1m"
+#define COL_CYAN "\033[36;1m"
+#define COL_ORANGE "\033[38;5;208m"
+#define COL_ACK "\033[38;5;154m"
+#define COL_REC "\033[38;5;133m"
+#define COL_MQTT "\033[38;5;228m"
+#define COL_NOTIF "\033[38;5;48m"
+#define COL_GRPW "\033[38;5;211m"
 
 //init code
 void mishka_init(void);

@@ -1,5 +1,7 @@
 
-#include "mishka_declaration.h"
+//#include "mishka_declaration.h"
+
+#include "flash.h"
 
 int16_t momentAdd;
 uint16_t mDiffLimit = MOMENT_DIFF_LIMIT;
@@ -444,7 +446,17 @@ static uint16_t bntPressCnt;
 //8 hz
 void mishka_tick(void){
 
+static uint8_t isFirstCall = 1;
 static uint8_t isNeedSetKoefs = 0;
+
+if (isFirstCall){
+	puts("\n\r");
+	puts(COL_GREEN"Get saved koefs ...");puts("\n\r");
+	getKoefs(&mishka.koefs);
+	puts("recovered steerTargetAngle=");puth(mishka.steerTargetAngle); puts("\n\r");
+	puts("recovered steerPosition="COL_END);puth(mishka.steerPosition);puts("\n\r");	
+	isFirstCall = 0;
+}
 
 	steerKey = getAccKey();
 	if (steerKey != oldSteerKey){
@@ -543,18 +555,21 @@ static uint8_t isNeedSetKoefs = 0;
 
 
 	if (statusCnt%2){
-		puts("\n\r");
-		//puth(mishka.steerPosition); puts(" ");puth(mishka.steerTargetAngle);
-		puts("steerTargetMoment=");puth(mishka.steerTargetMoment);puts("\n\r");
-		puts("steerTargetAngle=");puth(mishka.steerTargetAngle); puts(" "); 
-		puts("steerPosition=");puth(mishka.steerPosition);puts("\n\r");
-		puts("speed=");puth(mishka.speed);puts("\n\r");
-		puts("currentState=");puth(mishka.currentState); puts(" "); puth(onState); puts("\n\r");
-		puts("showState=");puth(mishka.showState);  puts("\n\r");
-		puts("delayKoef=");puth(mishka.koefs.steerActuatorDelay); puts("\n\r");
-		puts("ratioKoef=");puth(mishka.koefs.steerRatio); puts("\n\r");
-		puts("button="); puts(keyToString(steerKey)); puts(" "); puth(bntPressCnt);puts("\n\r");
-		puts("\n\r");
+		// puts("\n\r");
+		// //puth(mishka.steerPosition); puts(" ");puth(mishka.steerTargetAngle);
+		// puts("steerTargetMoment=");puth(mishka.steerTargetMoment);puts("\n\r");
+		// puts("steerTargetAngle=");puth(mishka.steerTargetAngle); puts(" "); 
+		// puts("steerPosition=");puth(mishka.steerPosition);puts("\n\r");
+		// puts("speed=");puth(mishka.speed);puts("\n\r");
+		// puts("currentState=");puth(mishka.currentState); puts(" "); puth(onState); puts("\n\r");
+		// puts("showState=");puth(mishka.showState);  puts("\n\r");
+		// puts("delayKoef=");puth(mishka.koefs.steerActuatorDelay); puts("\n\r");
+		// puts("ratioKoef=");puth(mishka.koefs.steerRatio); puts("\n\r");
+		// puts("button="); puts(keyToString(steerKey)); puts(" "); puth(bntPressCnt);puts("\n\r");
+		// puts("\n\r");
+
+
+
 	//	puth(steerKey); puts(" "); puth(mishka.opData);
 	//	puts("\n\r");
 	//	puts("\n\r");
@@ -588,7 +603,8 @@ static uint8_t isNeedSetKoefs = 0;
 //	}
 
 	if (isNeedSetKoefs){
-		//setKoefs(&murchik.koefs);
+		puts(COL_GREEN"Save koefs ..."COL_END);puts("\n\r");
+		setKoefs(&mishka.koefs);
 		isNeedSetKoefs = 0;
 	}
 
